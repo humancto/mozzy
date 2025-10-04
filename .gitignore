@@ -1,0 +1,27 @@
+# Binaries
+mozzy
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Build artifacts
+dist/
+bin/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Temporary/old directories
+starter-boilerplate/
+
+# Claude AI files
+.claude/
+CLAUDE.md
+PROJECT_REQUIREMENTS.md

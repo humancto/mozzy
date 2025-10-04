@@ -1,0 +1,25 @@
+name: Example User Flow
+env: dev
+steps:
+  - name: Login
+    method: POST
+    url: /auth
+    json:
+      username: alice
+      password: secret
+    capture:
+      token: .access_token
+
+  - name: Get Profile
+    method: GET
+    url: /profile
+    headers:
+      Authorization: "Bearer {{token}}"
+    capture:
+      userId: .id
+
+  - name: Update User
+    method: PUT
+    url: /users/{{userId}}
+    json:
+      status: active

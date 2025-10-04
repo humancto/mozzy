@@ -1,0 +1,13 @@
+{
+  "default_env": "dev",
+  "environments": {
+    "dev": "https://api.dev.example.com",
+    "staging": "https://api.staging.example.com",
+    "prod": "https://api.example.com"
+  },
+  "default_headers": {
+    "Content-Type": "application/json",
+    "User-Agent": "mozzy/0.1"
+  },
+  "redact_headers": ["authorization", "x-api-key"]
+}
