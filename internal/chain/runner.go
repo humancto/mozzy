@@ -24,9 +24,10 @@ type Step struct {
 }
 
 type Flow struct {
-	Name       string `yaml:"name"`
-	Env        string `yaml:"env"`
-	Steps      []Step `yaml:"steps"`
+	Name        string `yaml:"name"`
+	Description string `yaml:"description,omitempty"`
+	Env         string `yaml:"env"`
+	Steps       []Step `yaml:"steps"`
 
 	// populated by cmd/run
 	EnvName    string `yaml:"-"`
