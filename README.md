@@ -354,6 +354,21 @@ mozzy download https://example.com/file.zip --overwrite
 mozzy download https://example.com/data.json --no-progress
 ```
 
+**File Uploads:**
+```bash
+# Upload single file
+mozzy upload https://api.example.com/upload -f avatar.jpg
+
+# Upload multiple files
+mozzy upload https://api.example.com/upload -f file1.jpg -f file2.png
+
+# Upload with form data
+mozzy upload https://api.example.com/upload -f resume.pdf --data "name=John" --data "email=john@example.com"
+
+# Upload with authentication
+mozzy upload https://api.example.com/upload -f file.jpg --auth token123
+```
+
 ---
 
 ## 📚 Real-World Examples
@@ -473,6 +488,7 @@ mozzy run onboarding.yaml
 |---------|-------------|
 | `GET/POST/PUT/DELETE/PATCH` | HTTP verbs |
 | `download <url>` | Download files with progress bar |
+| `upload <url>` | Upload files with multipart forms |
 | `save <name> <verb> <url>` | Save request to collection |
 | `list` | List saved requests |
 | `exec <name>` | Execute saved request |

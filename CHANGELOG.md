@@ -5,6 +5,20 @@ All notable changes to mozzy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-10-14
+
+### Added
+- **File Uploads** - `mozzy upload` command with multipart form support
+  - Single and multiple file uploads
+  - Custom field names for each file
+  - Form data fields with `--data` flag
+  - Progress tracking with spinner animation
+  - Custom headers and bearer token authentication
+  - Optional `--no-progress` for scripting
+  - Human-readable file sizes and upload time
+- Comprehensive test suite for upload functionality (40+ tests)
+- Example scripts for various upload scenarios
+
 ## [1.4.0] - 2025-10-14
 
 ### Added
@@ -124,6 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cookie jar support
 - Retry with exponential backoff
 
+[1.5.0]: https://github.com/humancto/mozzy/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/humancto/mozzy/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/humancto/mozzy/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/humancto/mozzy/compare/v1.1.0...v1.2.0
