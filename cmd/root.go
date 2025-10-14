@@ -6,6 +6,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/humancto/mozzy/internal/ui"
 )
 
 var (
@@ -27,7 +28,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "mozzy",
 	Short: "mozzy: Postman-level JSON HTTP client for your terminal",
-	Long:  "mozzy is a JSON-native HTTP client with pretty output, inline querying, JWT tools, history, and request chaining.",
+	Long:  ui.RenderBanner() + "\n\nmozzy is a JSON-native HTTP client with pretty output, inline querying, JWT tools, history, and request chaining.\n\n" + ui.RenderQuickStart(),
 }
 
 func Execute() {
