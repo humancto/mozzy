@@ -376,91 +376,270 @@ mozzy upload https://api.example.com/upload -f file.jpg --auth token123
 
 ## 📚 Real-World Examples
 
-### Example 1: GitHub API
+### 🐙 Example 1: Exploring GitHub's API
+
+**Use case**: Query GitHub's public API to fetch user profiles and repositories.
 
 ```bash
-# Get user info
+# Get user info with colored output
+mozzy GET https://api.github.com/users/torvalds --color
+
+# Extract just the name
 mozzy GET https://api.github.com/users/torvalds --jq .name
 
-# Get repositories
+# Get first repository name
 mozzy GET https://api.github.com/users/torvalds/repos --jq .[0].name
 
-# Save for reuse
-mozzy save gh-user GET https://api.github.com/users/torvalds
-mozzy exec gh-user
+# Save for reuse in your collection
+mozzy save gh-torvalds GET https://api.github.com/users/torvalds \
+  --desc "Get Linus Torvalds GitHub profile"
+
+# Execute anytime
+mozzy exec gh-torvalds
 ```
 
-### Example 2: Authentication Flow
+<!-- GIF placeholder: Demo showing colorized JSON output and --jq filtering -->
+![GitHub API Demo](https://via.placeholder.com/800x400.png?text=GitHub+API+Demo+%28Add+GIF+here%29)
+
+---
+
+### 🔐 Example 2: OAuth & Authentication Workflows
+
+**Use case**: Login to an API, capture the access token, and use it for authenticated requests.
 
 ```bash
-# Login and capture token
-mozzy POST https://api.example.com/auth \
-  --json '{"username":"alice","password":"secret"}' \
-  --capture token=.access_token
+# Step 1: Login and capture the token
+mozzy POST https://api.example.com/auth/login \
+  --json '{"username":"alice","password":"secret123"}' \
+  --capture token=.access_token \
+  --verbose
 
-# Use token
-mozzy GET https://api.example.com/profile \
+# Step 2: Use the captured token for authenticated requests
+mozzy GET https://api.example.com/user/profile \
   --auth "{{token}}" \
   --jq .email
+
+# Step 3: Update profile with the token
+mozzy PATCH https://api.example.com/user/profile \
+  --auth "{{token}}" \
+  --json '{"bio":"DevOps Engineer"}' \
+  --verbose
 ```
 
-### Example 3: CI/CD Testing
+<!-- GIF placeholder: Demo showing token capture and reuse -->
+![Authentication Flow Demo](https://via.placeholder.com/800x400.png?text=Auth+Flow+Demo+%28Add+GIF+here%29)
+
+---
+
+### ⚙️ Example 3: CI/CD Health Checks & Monitoring
+
+**Use case**: Integrate mozzy into your deployment pipeline to verify API health and run smoke tests.
 
 ```bash
-# Test API with --fail flag (exits non-zero on error)
+# Basic health check with exit code
 mozzy GET https://api.example.com/health --fail
 
-# Retry on failure
-mozzy GET https://api.example.com/users --retry 3 --fail
+# Health check with retry logic (5xx errors)
+mozzy GET https://api.example.com/health \
+  --retry 3 \
+  --retry-on "5xx" \
+  --fail
 
-# Use in scripts
-if mozzy GET $API_URL/health --fail > /dev/null 2>&1; then
-  echo "API is healthy"
+# Advanced: Health check script for CI/CD
+#!/bin/bash
+if mozzy GET $API_URL/health --fail --timeout 10s > /dev/null 2>&1; then
+  echo "✅ API is healthy"
+  mozzy GET $API_URL/metrics --jq .uptime
 else
-  echo "API is down"
+  echo "❌ API is down - deploying rollback"
   exit 1
 fi
+
+# Load testing before production deployment
+mozzy load https://staging.api.example.com/users \
+  --requests 1000 \
+  --concurrent 10
 ```
 
-### Example 4: Complex Workflow
+<!-- GIF placeholder: Demo showing retry logic and health checks -->
+![CI/CD Monitoring Demo](https://via.placeholder.com/800x400.png?text=CI%2FCD+Demo+%28Add+GIF+here%29)
 
-**onboarding.yaml:**
+---
+
+### 🔗 Example 4: Multi-Step E-commerce Workflow
+
+**Use case**: Automate a complete user onboarding flow with conditional error handling.
+
+**onboarding-flow.yaml:**
 ```yaml
-name: Complete User Onboarding
+name: E-commerce User Onboarding
+description: Register user, verify email, create profile, and subscribe
+
 steps:
-  - name: Register user
+  - name: register
     method: POST
-    url: https://api.example.com/register
+    url: https://api.shop.example.com/register
     json:
       name: "Alice Smith"
       email: "alice@example.com"
+      password: "secure123"
     capture:
       userId: .user.id
+      verifyToken: .verification_token
+    assert:
+      - status == 201
+      - .user.id exists
+    on_success: verify_email
+    on_failure: error_handler
 
-  - name: Verify email
+  - name: verify_email
     method: POST
-    url: https://api.example.com/verify
+    url: https://api.shop.example.com/verify
     json:
       userId: "{{userId}}"
+      token: "{{verifyToken}}"
+    assert:
+      - status == 200
+      - .verified == true
+    on_success: create_profile
+    on_failure: error_handler
 
-  - name: Create profile
+  - name: create_profile
     method: POST
-    url: https://api.example.com/profiles
+    url: https://api.shop.example.com/profiles
     json:
       userId: "{{userId}}"
       bio: "Software Engineer"
+      preferences:
+        newsletter: true
+        notifications: true
+    capture:
+      profileId: .profile.id
+    on_success: subscribe
 
-  - name: Subscribe to newsletter
+  - name: subscribe
     method: POST
-    url: https://api.example.com/subscriptions
+    url: https://api.shop.example.com/subscriptions
     json:
       userId: "{{userId}}"
-      type: "weekly"
+      plan: "premium"
+      billing: "monthly"
+    assert:
+      - status == 200
+      - .subscription.active == true
+
+  - name: error_handler
+    method: POST
+    url: https://api.shop.example.com/errors/log
+    json:
+      flow: "onboarding"
+      message: "User onboarding failed"
+      userId: "{{userId}}"
 ```
 
 ```bash
-mozzy run onboarding.yaml
+# Run the complete workflow
+mozzy run onboarding-flow.yaml
+
+# Run as test suite with JUnit output for CI
+mozzy test onboarding-flow.yaml --junit-output results.xml
 ```
+
+<!-- GIF placeholder: Demo showing workflow execution with step-by-step progress -->
+![Workflow Automation Demo](https://via.placeholder.com/800x400.png?text=Workflow+Demo+%28Add+GIF+here%29)
+
+---
+
+### 📦 Example 5: File Upload & Download Operations
+
+**Use case**: Upload product images to an e-commerce API and download invoices.
+
+```bash
+# Upload single product image
+mozzy upload https://api.shop.example.com/products/123/images \
+  -f product-photo.jpg \
+  --auth "your-token" \
+  --data "alt_text=Blue Widget" \
+  --data "primary=true"
+
+# Upload multiple images at once
+mozzy upload https://api.shop.example.com/products/456/gallery \
+  -f image1.jpg \
+  -f image2.jpg \
+  -f image3.png \
+  --auth "your-token"
+
+# Download invoice with progress bar
+mozzy download https://api.shop.example.com/invoices/789/pdf \
+  -o invoice-789.pdf \
+  --auth "your-token"
+
+# Download large dataset without progress (for scripts)
+mozzy download https://api.example.com/exports/data.zip \
+  --no-progress \
+  --overwrite
+```
+
+<!-- GIF placeholder: Demo showing upload progress and download with progress bar -->
+![File Operations Demo](https://via.placeholder.com/800x400.png?text=Upload%2FDownload+Demo+%28Add+GIF+here%29)
+
+---
+
+### 🧪 Example 6: API Testing & Validation
+
+**Use case**: Run automated API tests with assertions and schema validation.
+
+```bash
+# Test with inline assertions
+mozzy GET https://api.example.com/users/1 \
+  --assert "status == 200" \
+  --assert ".name exists" \
+  --assert ".email contains @example.com"
+
+# Compare responses between environments
+mozzy GET https://staging.api.example.com/users/1 -o staging.json
+mozzy GET https://prod.api.example.com/users/1 -o prod.json
+mozzy diff staging.json prod.json
+
+# Export collection to Postman for team sharing
+mozzy export my-api-collection --format postman -o postman-collection.json
+
+# Export to curl for documentation
+mozzy export my-request --format curl
+```
+
+**test-suite.yaml:**
+```yaml
+name: API Test Suite
+steps:
+  - name: Test user creation
+    method: POST
+    url: https://api.example.com/users
+    json:
+      name: "Test User"
+      email: "test@example.com"
+    assert:
+      - status == 201
+      - .id exists
+      - .email == "test@example.com"
+      - response_time < 500ms
+
+  - name: Test user retrieval
+    method: GET
+    url: https://api.example.com/users/1
+    assert:
+      - status == 200
+      - .name exists
+      - length(.friends) >= 0
+```
+
+```bash
+# Run test suite
+mozzy test test-suite.yaml --junit-output test-results.xml
+```
+
+<!-- GIF placeholder: Demo showing test execution with assertions -->
+![Testing Demo](https://via.placeholder.com/800x400.png?text=Testing+Demo+%28Add+GIF+here%29)
 
 ---
 
@@ -558,5 +737,5 @@ Built by **Archy** ([@humancto](https://github.com/humancto))
 ---
 
 <p align="center">
-  <strong>Made with ❤️ by [humancto.com](https://www.humancto.com), for developers</strong>
+  <strong>Made with ❤️ by <a href="https://www.humancto.com">humancto.com</a>, for developers</strong>
 </p>
