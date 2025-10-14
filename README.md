@@ -519,7 +519,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📝 License
 
-MIT © 2025 Archith Sharma
+MIT © 2025 Archy
 
 ---
 
@@ -537,7 +537,7 @@ If mozzy makes your API testing easier, give it a ⭐️ on GitHub!
 
 ## 👨‍💻 About the Author
 
-Built by **Archith Sharma** ([@humancto](https://github.com/humancto)) — a developer passionate about creating tools that make developers' lives easier.
+Built by **Archy** ([@humancto](https://github.com/humancto))
 
 - 🌐 Website: [humancto.com](https://www.humancto.com)
 - ☕ Support: [buymeacoffee.com/humancto](https://buymeacoffee.com/humancto)
@@ -555,5 +555,5 @@ Built by **Archith Sharma** ([@humancto](https://github.com/humancto)) — a dev
 ---
 
 <p align="center">
-  <strong>Made with ❤️ by developers, for developers</strong>
+  <strong>Made with ❤️ by [humancto.com](https://www.humancto.com), for developers</strong>
 </p>
