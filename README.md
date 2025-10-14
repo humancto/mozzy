@@ -1,8 +1,14 @@
-# mozzy — Postman for your Terminal 🚀
+<p align="center">
+  <img src="assets/logo.png" alt="Mozzy Logo" width="200"/>
+</p>
 
-[![GitHub release](https://img.shields.io/github/v/release/humancto/mozzy)](https://github.com/humancto/mozzy/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev/)
+<h1 align="center">mozzy — Postman for your Terminal 🚀</h1>
+
+<p align="center">
+  <a href="https://github.com/humancto/mozzy/releases"><img src="https://img.shields.io/github/v/release/humancto/mozzy" alt="GitHub release"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://go.dev/"><img src="https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go" alt="Go Version"></a>
+</p>
 
 A modern, developer-friendly HTTP client built for the terminal. Think **Postman meets curl** with beautiful colors, inline JSON queries, request collections, JWT tools, and powerful workflow automation.
 
