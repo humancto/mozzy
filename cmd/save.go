@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/humancto/mozzy/internal/collection"
+	"github.com/humancto/mozzy/internal/ui"
 )
 
 var (
@@ -63,11 +63,7 @@ Examples:
 			return err
 		}
 
-		successColor := color.New(color.FgGreen, color.Bold)
-		fmt.Printf("%s %s\n",
-			color.GreenString("✓"),
-			successColor.Sprintf("Saved request '%s' to collection", name),
-		)
+		fmt.Println(ui.SuccessBanner(fmt.Sprintf("Saved request '%s' to collection", name)))
 		return nil
 	},
 }

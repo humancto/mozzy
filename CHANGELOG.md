@@ -5,6 +5,38 @@ All notable changes to mozzy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2025-10-14
+
+### Added
+- **Beautiful UI with Lipgloss** - Complete visual overhaul
+  - Box-drawing characters for better visual hierarchy
+  - Rounded borders and styled banners
+  - Color-coded success, error, warning, and info messages
+  - Professional table layout for collections list
+  - Themed color palette (blue, green, red, yellow, cyan, purple)
+- **New UI Package** (`internal/ui`)
+  - Reusable styled components (banners, boxes, tables)
+  - Success/Error/Warning/Info banner functions
+  - Table rendering with box-drawing characters
+  - Key-value pair formatting helpers
+  - Help screen utilities with categorized commands
+- **Enhanced Commands**
+  - `mozzy list` - Beautiful table with borders showing Name, Method, URL, Description
+  - `mozzy save` - Success banner with checkmark on save
+  - Better empty state messages with helpful tips
+
+### Changed
+- Collections list now displays in a formatted table instead of plain text
+- Success messages use styled banners with emoji and borders
+- Improved visual consistency across all commands
+- Added helpful tips after command outputs
+
+### Documentation
+- Added `VISUAL_IMPROVEMENTS.md` - Comprehensive UI enhancement brainstorm
+- Added `DEMOS.md` - Guide for creating and updating demo GIFs
+- Created 5 VHS demo recordings showing key features
+- Updated README with showcase GIF and example demonstrations
+
 ## [1.5.0] - 2025-10-14
 
 ### Added
