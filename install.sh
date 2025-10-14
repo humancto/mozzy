@@ -28,7 +28,7 @@ echo "Detected platform: $PLATFORM"
 echo ""
 
 # Download URL
-VERSION="1.0.0"
+VERSION="1.0.1"
 URL="https://github.com/humancto/mozzy/releases/download/v${VERSION}/mozzy_${VERSION}_${PLATFORM}.tar.gz"
 
 echo "Downloading mozzy v${VERSION}..."
