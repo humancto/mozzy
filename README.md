@@ -339,6 +339,21 @@ mozzy GET /api/protected --auth your-token-here
 mozzy --env prod GET /api/protected
 ```
 
+**File Downloads:**
+```bash
+# Download with progress bar
+mozzy download https://example.com/file.zip
+
+# Custom output path
+mozzy download https://example.com/file.zip -o myfile.zip
+
+# Overwrite existing files
+mozzy download https://example.com/file.zip --overwrite
+
+# Disable progress for scripting
+mozzy download https://example.com/data.json --no-progress
+```
+
 ---
 
 ## 📚 Real-World Examples
@@ -457,6 +472,7 @@ mozzy run onboarding.yaml
 | Command | Description |
 |---------|-------------|
 | `GET/POST/PUT/DELETE/PATCH` | HTTP verbs |
+| `download <url>` | Download files with progress bar |
 | `save <name> <verb> <url>` | Save request to collection |
 | `list` | List saved requests |
 | `exec <name>` | Execute saved request |
