@@ -48,14 +48,35 @@ var jwtVerify = &cobra.Command{
 	Short: "Verify a JWT with HMAC secret or JWKS URL",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var err error
 		switch {
 		case jwkURL != "":
-			return jwtutil.VerifyWithJWKS(args[0], jwkURL)
+			err = jwtutil.VerifyWithJWKS(args[0], jwkURL)
 		case jwtSecret != "":
-			return jwtutil.VerifyHMAC(args[0], []byte(jwtSecret))
+			err = jwtutil.VerifyHMAC(args[0], []byte(jwtSecret))
 		default:
 			return fmt.Errorf("provide --secret (HS*) or --jwk (JWKS)")
 		}
+
+		if err != nil {
+			return fmt.Errorf("❌ verification failed: %w", err)
+		}
+
+		fmt.Println("✅ JWT signature is valid")
+
+		// Also decode and show expiration if present
+		_, p, _ := jwtutil.Decode(args[0])
+		if exp, ok := p["exp"].(float64); ok {
+			t := time.Unix(int64(exp), 0)
+			remaining := time.Until(t)
+			if remaining > 0 {
+				fmt.Printf("⏰ Expires in: %s (at %s)\n", remaining.Round(time.Second), t.Format(time.RFC3339))
+			} else {
+				fmt.Printf("⚠️  Token expired %s ago (at %s)\n", (-remaining).Round(time.Second), t.Format(time.RFC3339))
+			}
+		}
+
+		return nil
 	},
 }
 

@@ -1,0 +1,27 @@
+name: User Onboarding Workflow
+description: Complete user registration and profile creation flow
+
+steps:
+  - name: Get existing user data
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users/1
+    capture:
+      userId: .id
+      userName: .name
+      userEmail: .email
+
+  - name: Create new post for user
+    method: POST
+    url: https://jsonplaceholder.typicode.com/posts
+    json:
+      title: "Welcome {{userName}}!"
+      body: "This is your first post. Your user ID is {{userId}}"
+      userId: "{{userId}}"
+
+  - name: Create todo for user
+    method: POST
+    url: https://jsonplaceholder.typicode.com/todos
+    json:
+      title: "Complete profile setup"
+      completed: false
+      userId: "{{userId}}"

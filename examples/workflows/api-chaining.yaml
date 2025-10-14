@@ -1,0 +1,23 @@
+name: API Chaining Example
+description: Demonstrates capturing data from one request and using it in subsequent requests
+
+steps:
+  - name: Fetch user list
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users
+    capture:
+      firstUserId: .[0].id
+      firstUserName: .[0].name
+
+  - name: Get posts by that user
+    method: GET
+    url: https://jsonplaceholder.typicode.com/posts?userId={{firstUserId}}
+    capture:
+      firstPostId: .[0].id
+      firstPostTitle: .[0].title
+
+  - name: Get comments on that post
+    method: GET
+    url: https://jsonplaceholder.typicode.com/posts/{{firstPostId}}/comments
+    capture:
+      commentCount: length

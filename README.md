@@ -25,6 +25,21 @@ mozzy GET https://api.github.com/users/torvalds --jq .name --color
 - 🔐 **JWT superpowers** - Decode, verify, sign JWTs instantly
 - 🚀 **Dev-friendly** - Built by developers, for developers
 
+### mozzy vs The Rest
+
+| Feature | curl | httpie | Postman | **mozzy** |
+|---------|:----:|:------:|:-------:|:---------:|
+| Colored JSON | ❌ | ✅ | ✅ | ✅ |
+| Inline JQ Queries | ❌ | ❌ | ❌ | ✅ |
+| Request Collections | ❌ | ❌ | ✅ | ✅ |
+| YAML Workflows | ❌ | ❌ | ✅ | ✅ |
+| API Chaining | ❌ | ❌ | ⚠️ | ✅ |
+| JWT Tools Built-in | ❌ | ❌ | ❌ | ✅ |
+| Request History | ❌ | ❌ | ✅ | ✅ |
+| CLI First | ✅ | ✅ | ❌ | ✅ |
+| Free & Open Source | ✅ | ✅ | 💰 | ✅ |
+| Easy to Learn | ❌ | ✅ | ✅ | ✅ |
+
 ---
 
 ## 🚀 Installation
