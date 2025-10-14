@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/humancto/mozzy/internal/assertions"
 	"github.com/humancto/mozzy/internal/vars"
 	"github.com/humancto/mozzy/internal/httpclient"
 	"github.com/humancto/mozzy/internal/formatter"
@@ -89,6 +90,28 @@ func Run(ctx context.Context, f Flow) error {
 			if err := vars.Capture(resBody, spec); err != nil {
 				fmt.Fprintf(os.Stderr, "warn: capture failed %q: %v\n", spec, err)
 			}
+		}
+
+		// assertions
+		if len(s.Assert) > 0 {
+			fmt.Fprintf(os.Stderr, "\n🧪 Running assertions...\n")
+			allPassed := true
+			for _, assertExpr := range s.Assert {
+				result, err := assertions.Evaluate(assertExpr, res.StatusCode, resBody, ms)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "  ⚠️  Error: %v\n", err)
+					allPassed = false
+					continue
+				}
+				fmt.Fprintf(os.Stderr, "  %s\n", result.Message)
+				if !result.Passed {
+					allPassed = false
+				}
+			}
+			if !allPassed {
+				return fmt.Errorf("❌ assertions failed for step: %s", s.Name)
+			}
+			fmt.Fprintf(os.Stderr, "✅ All assertions passed\n")
 		}
 	}
 	return nil
