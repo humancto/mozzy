@@ -12,6 +12,10 @@
 
 A modern, developer-friendly HTTP client built for the terminal. Think **Postman meets curl** with beautiful colors, inline JSON queries, request collections, JWT tools, and powerful workflow automation.
 
+<p align="center">
+  <img src="assets/demo-showcase.gif" alt="Mozzy Demo" width="100%"/>
+</p>
+
 ```bash
 # One command to rule them all
 mozzy GET https://api.github.com/users/torvalds --jq .name --color
@@ -386,6 +390,10 @@ mozzy upload https://api.example.com/upload -f file.jpg --auth token123
 
 **Use case**: Query GitHub's public API to fetch user profiles and repositories.
 
+<p align="center">
+  <img src="assets/demo-01-github-api.gif" alt="GitHub API Demo" width="90%"/>
+</p>
+
 ```bash
 # Get user info with colored output
 mozzy GET https://api.github.com/users/torvalds --color
@@ -403,9 +411,6 @@ mozzy save gh-torvalds GET https://api.github.com/users/torvalds \
 # Execute anytime
 mozzy exec gh-torvalds
 ```
-
-<!-- GIF placeholder: Demo showing colorized JSON output and --jq filtering -->
-![GitHub API Demo](https://via.placeholder.com/800x400.png?text=GitHub+API+Demo+%28Add+GIF+here%29)
 
 ---
 
@@ -431,9 +436,6 @@ mozzy PATCH https://api.example.com/user/profile \
   --json '{"bio":"DevOps Engineer"}' \
   --verbose
 ```
-
-<!-- GIF placeholder: Demo showing token capture and reuse -->
-![Authentication Flow Demo](https://via.placeholder.com/800x400.png?text=Auth+Flow+Demo+%28Add+GIF+here%29)
 
 ---
 
@@ -466,9 +468,6 @@ mozzy load https://staging.api.example.com/users \
   --requests 1000 \
   --concurrent 10
 ```
-
-<!-- GIF placeholder: Demo showing retry logic and health checks -->
-![CI/CD Monitoring Demo](https://via.placeholder.com/800x400.png?text=CI%2FCD+Demo+%28Add+GIF+here%29)
 
 ---
 
@@ -551,9 +550,6 @@ mozzy run onboarding-flow.yaml
 mozzy test onboarding-flow.yaml --junit-output results.xml
 ```
 
-<!-- GIF placeholder: Demo showing workflow execution with step-by-step progress -->
-![Workflow Automation Demo](https://via.placeholder.com/800x400.png?text=Workflow+Demo+%28Add+GIF+here%29)
-
 ---
 
 ### 📦 Example 5: File Upload & Download Operations
@@ -585,9 +581,6 @@ mozzy download https://api.example.com/exports/data.zip \
   --no-progress \
   --overwrite
 ```
-
-<!-- GIF placeholder: Demo showing upload progress and download with progress bar -->
-![File Operations Demo](https://via.placeholder.com/800x400.png?text=Upload%2FDownload+Demo+%28Add+GIF+here%29)
 
 ---
 
@@ -643,9 +636,6 @@ steps:
 # Run test suite
 mozzy test test-suite.yaml --junit-output test-results.xml
 ```
-
-<!-- GIF placeholder: Demo showing test execution with assertions -->
-![Testing Demo](https://via.placeholder.com/800x400.png?text=Testing+Demo+%28Add+GIF+here%29)
 
 ---
 
