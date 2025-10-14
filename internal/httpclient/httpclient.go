@@ -39,10 +39,26 @@ type TimingInfo struct {
 	Total            time.Duration
 }
 
+type VerboseInfo struct {
+	ResolvedIP      string
+	DNSLatency      time.Duration
+	Protocol        string
+	TLSVersion      string
+	TLSCipher       string
+	CertSubject     string
+	CertIssuer      string
+	CertExpiry      time.Time
+	RequestSize     int64
+	ResponseSize    int64
+	Compressed      bool
+	CompressionRatio float64
+}
+
 var globalCookieJar *cookiejar.Jar
 
 func Do(ctx context.Context, r Request) (*http.Response, []byte, time.Duration, error) {
 	var timings TimingInfo
+	var verboseInfo VerboseInfo
 	var res *http.Response
 	var body []byte
 	var err error
@@ -73,7 +89,7 @@ func Do(ctx context.Context, r Request) (*http.Response, []byte, time.Duration, 
 			time.Sleep(backoff)
 		}
 
-		res, body, timings, err = doRequest(ctx, r)
+		res, body, timings, verboseInfo, err = doRequest(ctx, r)
 
 		// Check if we should retry based on policy
 		shouldRetry := false
@@ -99,29 +115,38 @@ func Do(ctx context.Context, r Request) (*http.Response, []byte, time.Duration, 
 	}
 
 	if r.Verbose && err == nil {
-		printVerbose(r, res, timings)
+		printVerbose(r, res, timings, verboseInfo)
 	}
 
 	return res, body, timings.Total, err
 }
 
-func doRequest(ctx context.Context, r Request) (*http.Response, []byte, TimingInfo, error) {
+func doRequest(ctx context.Context, r Request) (*http.Response, []byte, TimingInfo, VerboseInfo, error) {
 	var timings TimingInfo
+	var verboseInfo VerboseInfo
 	var dnsStart, connectStart, tlsStart, reqStart time.Time
 
-	// Request tracing for timing
+	// Request tracing for timing and connection info
 	trace := &httptrace.ClientTrace{
 		DNSStart: func(_ httptrace.DNSStartInfo) {
 			dnsStart = time.Now()
 		},
-		DNSDone: func(_ httptrace.DNSDoneInfo) {
+		DNSDone: func(info httptrace.DNSDoneInfo) {
 			timings.DNSLookup = time.Since(dnsStart)
+			verboseInfo.DNSLatency = timings.DNSLookup
+			if len(info.Addrs) > 0 {
+				verboseInfo.ResolvedIP = info.Addrs[0].String()
+			}
 		},
 		ConnectStart: func(_, _ string) {
 			connectStart = time.Now()
 		},
-		ConnectDone: func(_, _ string, _ error) {
+		ConnectDone: func(_, addr string, _ error) {
 			timings.TCPConnection = time.Since(connectStart)
+			// If DNS didn't resolve an IP, capture it from connect
+			if verboseInfo.ResolvedIP == "" && addr != "" {
+				verboseInfo.ResolvedIP = addr
+			}
 		},
 		TLSHandshakeStart: func() {
 			tlsStart = time.Now()
@@ -138,7 +163,17 @@ func doRequest(ctx context.Context, r Request) (*http.Response, []byte, TimingIn
 
 	req, err := http.NewRequestWithContext(httptrace.WithClientTrace(ctx, trace), r.Method, r.URL, bytes.NewReader(r.Body))
 	if err != nil {
-		return nil, nil, timings, err
+		return nil, nil, timings, verboseInfo, err
+	}
+
+	// Calculate request size
+	verboseInfo.RequestSize = int64(len(r.Body))
+	if req.Header != nil {
+		for k, vv := range req.Header {
+			for _, v := range vv {
+				verboseInfo.RequestSize += int64(len(k) + len(v) + 4) // key: value\r\n
+			}
+		}
 	}
 
 	if r.Token != "" {
@@ -172,7 +207,23 @@ func doRequest(ctx context.Context, r Request) (*http.Response, []byte, TimingIn
 	timings.Total = time.Since(start)
 
 	if err != nil {
-		return nil, nil, timings, err
+		return nil, nil, timings, verboseInfo, err
+	}
+
+	// Capture protocol info
+	verboseInfo.Protocol = res.Proto
+
+	// Capture TLS info if HTTPS
+	if res.TLS != nil {
+		verboseInfo.TLSVersion = tlsVersionString(res.TLS.Version)
+		verboseInfo.TLSCipher = tls.CipherSuiteName(res.TLS.CipherSuite)
+
+		if len(res.TLS.PeerCertificates) > 0 {
+			cert := res.TLS.PeerCertificates[0]
+			verboseInfo.CertSubject = cert.Subject.CommonName
+			verboseInfo.CertIssuer = cert.Issuer.CommonName
+			verboseInfo.CertExpiry = cert.NotAfter
+		}
 	}
 
 	bodyStart := time.Now()
@@ -180,7 +231,27 @@ func doRequest(ctx context.Context, r Request) (*http.Response, []byte, TimingIn
 	timings.ContentTransfer = time.Since(bodyStart)
 
 	if err != nil {
-		return res, nil, timings, err
+		return res, nil, timings, verboseInfo, err
+	}
+
+	// Calculate response size
+	verboseInfo.ResponseSize = int64(len(body))
+	if res.Header != nil {
+		for k, vv := range res.Header {
+			for _, v := range vv {
+				verboseInfo.ResponseSize += int64(len(k) + len(v) + 4)
+			}
+		}
+	}
+
+	// Check if response was compressed
+	contentEncoding := res.Header.Get("Content-Encoding")
+	if contentEncoding == "gzip" || contentEncoding == "deflate" || contentEncoding == "br" {
+		verboseInfo.Compressed = true
+		// ContentLength is uncompressed size if available
+		if res.ContentLength > 0 {
+			verboseInfo.CompressionRatio = (1.0 - float64(len(body))/float64(res.ContentLength)) * 100
+		}
 	}
 
 	// Save cookies if jar is enabled
@@ -188,19 +259,90 @@ func doRequest(ctx context.Context, r Request) (*http.Response, []byte, TimingIn
 		saveCookies(r.CookieJar, globalCookieJar)
 	}
 
-	return res, body, timings, nil
+	return res, body, timings, verboseInfo, nil
 }
 
-func printVerbose(r Request, res *http.Response, t TimingInfo) {
+func tlsVersionString(version uint16) string {
+	switch version {
+	case tls.VersionTLS10:
+		return "TLS 1.0"
+	case tls.VersionTLS11:
+		return "TLS 1.1"
+	case tls.VersionTLS12:
+		return "TLS 1.2"
+	case tls.VersionTLS13:
+		return "TLS 1.3"
+	default:
+		return fmt.Sprintf("Unknown (0x%04x)", version)
+	}
+}
+
+func printVerbose(r Request, res *http.Response, t TimingInfo, v VerboseInfo) {
 	cyan := color.New(color.FgCyan).SprintFunc()
 	gray := color.New(color.FgHiBlack).SprintFunc()
 	green := color.New(color.FgGreen).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
+	blue := color.New(color.FgBlue).SprintFunc()
+
+	// DNS & Connection Info
+	if v.ResolvedIP != "" || v.Protocol != "" {
+		fmt.Fprintf(os.Stderr, "\n%s\n", cyan("🌐 Connection Info:"))
+		if v.ResolvedIP != "" {
+			fmt.Fprintf(os.Stderr, "%s Resolved IP:  %s\n", gray("•"), blue(v.ResolvedIP))
+		}
+		if v.Protocol != "" {
+			fmt.Fprintf(os.Stderr, "%s Protocol:     %s\n", gray("•"), blue(v.Protocol))
+		}
+		if v.TLSVersion != "" {
+			fmt.Fprintf(os.Stderr, "%s TLS Version:  %s\n", gray("•"), green(v.TLSVersion))
+			if v.TLSCipher != "" {
+				fmt.Fprintf(os.Stderr, "%s TLS Cipher:   %s\n", gray("•"), gray(v.TLSCipher))
+			}
+		}
+	}
+
+	// TLS Certificate Info
+	if v.CertSubject != "" {
+		fmt.Fprintf(os.Stderr, "\n%s\n", cyan("🔐 TLS Certificate:"))
+		fmt.Fprintf(os.Stderr, "%s Subject:      %s\n", gray("•"), yellow(v.CertSubject))
+		if v.CertIssuer != "" {
+			fmt.Fprintf(os.Stderr, "%s Issuer:       %s\n", gray("•"), gray(v.CertIssuer))
+		}
+		if !v.CertExpiry.IsZero() {
+			daysRemaining := int(time.Until(v.CertExpiry).Hours() / 24)
+			expiryColor := green
+			if daysRemaining < 30 {
+				expiryColor = yellow
+			}
+			fmt.Fprintf(os.Stderr, "%s Expires:      %s (%s)\n",
+				gray("•"),
+				v.CertExpiry.Format("2006-01-02"),
+				expiryColor(fmt.Sprintf("%d days remaining", daysRemaining)))
+		}
+	}
+
+	// Transfer Sizes
+	if v.RequestSize > 0 || v.ResponseSize > 0 {
+		fmt.Fprintf(os.Stderr, "\n%s\n", cyan("📦 Transfer Details:"))
+		if v.RequestSize > 0 {
+			fmt.Fprintf(os.Stderr, "%s Request:      %s\n", gray("•"), formatBytes(v.RequestSize))
+		}
+		if v.ResponseSize > 0 {
+			sizeStr := formatBytes(v.ResponseSize)
+			if v.Compressed {
+				sizeStr += fmt.Sprintf(" (%s compressed, %.1f%% reduction)",
+					yellow("gzip"),
+					v.CompressionRatio)
+			}
+			fmt.Fprintf(os.Stderr, "%s Response:     %s\n", gray("•"), sizeStr)
+		}
+	}
 
 	// Request headers
 	fmt.Fprintf(os.Stderr, "\n%s\n", cyan("→ Request Headers:"))
 	fmt.Fprintf(os.Stderr, "%s %s %s\n", gray(">"), r.Method, r.URL)
 	fmt.Fprintf(os.Stderr, "%s Host: %s\n", gray(">"), res.Request.Host)
-	fmt.Fprintf(os.Stderr, "%s User-Agent: mozzy/1.0\n", gray(">"))
+	fmt.Fprintf(os.Stderr, "%s User-Agent: mozzy/1.6.0\n", gray(">"))
 	for k, v := range res.Request.Header {
 		fmt.Fprintf(os.Stderr, "%s %s: %s\n", gray(">"), k, strings.Join(v, ", "))
 	}
@@ -212,25 +354,70 @@ func printVerbose(r Request, res *http.Response, t TimingInfo) {
 		fmt.Fprintf(os.Stderr, "%s %s: %s\n", gray("<"), k, strings.Join(v, ", "))
 	}
 
-	// Timing breakdown
-	fmt.Fprintf(os.Stderr, "\n%s\n", cyan("⏱  Timing Breakdown:"))
+	// Enhanced Timing breakdown with visual bars
+	fmt.Fprintf(os.Stderr, "\n%s\n", cyan("⏱  Request Timeline:"))
+	totalMs := float64(t.Total.Milliseconds())
+
 	if t.DNSLookup > 0 {
-		fmt.Fprintf(os.Stderr, "%s DNS Lookup:        %s\n", gray("•"), green(formatDuration(t.DNSLookup)))
+		pct := float64(t.DNSLookup.Milliseconds()) / totalMs * 100
+		bar := renderTimingBar(pct)
+		fmt.Fprintf(os.Stderr, "%s DNS Lookup       %6s  %s  %s\n",
+			gray("├─"), green(formatDuration(t.DNSLookup)), bar, gray(fmt.Sprintf("%.0f%%", pct)))
 	}
 	if t.TCPConnection > 0 {
-		fmt.Fprintf(os.Stderr, "%s TCP Connection:    %s\n", gray("•"), green(formatDuration(t.TCPConnection)))
+		pct := float64(t.TCPConnection.Milliseconds()) / totalMs * 100
+		bar := renderTimingBar(pct)
+		fmt.Fprintf(os.Stderr, "%s TCP Connect      %6s  %s  %s\n",
+			gray("├─"), green(formatDuration(t.TCPConnection)), bar, gray(fmt.Sprintf("%.0f%%", pct)))
 	}
 	if t.TLSHandshake > 0 {
-		fmt.Fprintf(os.Stderr, "%s TLS Handshake:     %s\n", gray("•"), green(formatDuration(t.TLSHandshake)))
+		pct := float64(t.TLSHandshake.Milliseconds()) / totalMs * 100
+		bar := renderTimingBar(pct)
+		fmt.Fprintf(os.Stderr, "%s TLS Handshake    %6s  %s  %s\n",
+			gray("├─"), green(formatDuration(t.TLSHandshake)), bar, gray(fmt.Sprintf("%.0f%%", pct)))
 	}
 	if t.ServerProcessing > 0 {
-		fmt.Fprintf(os.Stderr, "%s Server Processing: %s\n", gray("•"), green(formatDuration(t.ServerProcessing)))
+		pct := float64(t.ServerProcessing.Milliseconds()) / totalMs * 100
+		bar := renderTimingBar(pct)
+		fmt.Fprintf(os.Stderr, "%s Server Response  %6s  %s  %s\n",
+			gray("├─"), green(formatDuration(t.ServerProcessing)), bar, gray(fmt.Sprintf("%.0f%%", pct)))
 	}
 	if t.ContentTransfer > 0 {
-		fmt.Fprintf(os.Stderr, "%s Content Transfer:  %s\n", gray("•"), green(formatDuration(t.ContentTransfer)))
+		pct := float64(t.ContentTransfer.Milliseconds()) / totalMs * 100
+		bar := renderTimingBar(pct)
+		fmt.Fprintf(os.Stderr, "%s Content Transfer %6s  %s  %s\n",
+			gray("├─"), green(formatDuration(t.ContentTransfer)), bar, gray(fmt.Sprintf("%.0f%%", pct)))
 	}
-	fmt.Fprintf(os.Stderr, "%s Total:             %s\n", gray("•"), green(formatDuration(t.Total)))
+	fmt.Fprintf(os.Stderr, "%s Total            %6s  %s\n",
+		gray("└─"), green(formatDuration(t.Total)), yellow("████████████████████"))
 	fmt.Fprintf(os.Stderr, "\n")
+}
+
+func renderTimingBar(percentage float64) string {
+	barWidth := 20
+	filled := int(percentage / 100 * float64(barWidth))
+	if filled > barWidth {
+		filled = barWidth
+	}
+	if filled < 0 {
+		filled = 0
+	}
+
+	bar := strings.Repeat("█", filled) + strings.Repeat("░", barWidth-filled)
+	return bar
+}
+
+func formatBytes(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
 func formatDuration(d time.Duration) string {
