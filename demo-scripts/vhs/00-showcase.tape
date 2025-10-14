@@ -82,13 +82,13 @@ Type "clear"
 Enter
 Show
 
-# Example 4: Verbose mode
-Type "echo '⏱️  Example 4: Verbose mode with timing'" Enter
+# Example 4: Enhanced Verbose mode (v1.7.0)
+Type "echo '⏱️  Example 4: Enhanced verbose mode'" Enter
 Sleep 1s
-Type "mozzy GET https://jsonplaceholder.typicode.com/users/1 --verbose --color"
+Type "mozzy GET https://api.github.com/users/octocat --verbose --color"
 Sleep 500ms
 Enter
-Sleep 5s
+Sleep 6s
 
 Hide
 Type "clear"

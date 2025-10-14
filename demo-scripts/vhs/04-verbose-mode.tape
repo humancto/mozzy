@@ -2,19 +2,22 @@ Output ../assets/demo-04-verbose.gif
 
 Require mozzy
 
-Set FontSize 14
-Set Width 1200
-Set Height 800
+Set FontSize 13
+Set Width 1400
+Set Height 1000
 Set Padding 20
-Set Theme "Molokai"
+Set Theme "Dracula"
 
-Type "# Example 4: Verbose Mode with Timing" Sleep 500ms Enter
+Type "# Example 4: Enhanced Verbose Mode (v1.7.0)" Sleep 500ms Enter
 Sleep 1s
 
-Type "mozzy GET https://jsonplaceholder.typicode.com/users/1 --verbose --color"
+Type "# 🔍 DNS Resolution, TLS Info, Transfer Sizes & Visual Timing!" Sleep 500ms Enter
+Sleep 1.5s
+
+Type "mozzy GET https://api.github.com/users/octocat --verbose --color"
 Sleep 1s
 Enter
-Sleep 5s
+Sleep 6s
 
-Type "# ✅ See headers and timing breakdown!" Sleep 500ms Enter
+Type "# ✅ See: IP, Protocol, TLS Cert, Sizes, Timeline bars!" Sleep 500ms Enter
 Sleep 2s

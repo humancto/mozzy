@@ -308,13 +308,16 @@ mozzy history --json
 
 ### 🔧 Advanced Features
 
-**Verbose Mode:**
+**Enhanced Verbose Mode (v1.7.0):**
 ```bash
 mozzy GET /api/users --verbose
 # Shows:
-# - Request headers
-# - Response headers
-# - Timing breakdown (DNS, TLS, server, transfer)
+# - 🔍 DNS Resolution (resolved IP, latency)
+# - 🌐 Connection Protocol (HTTP/1.1, HTTP/2, HTTP/3)
+# - 🔐 TLS Certificate Info (subject, issuer, expiry)
+# - 📦 Transfer Sizes (request/response with compression ratio)
+# - ⏱️ Visual Timeline with progress bars and percentages
+# - Request & Response headers
 ```
 
 **Retry Logic with Conditions:**

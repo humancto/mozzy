@@ -11,9 +11,17 @@ Set Theme "Molokai"
 Type "# Example 5: POST Request with JSON" Sleep 500ms Enter
 Sleep 1s
 
-Type "mozzy POST https://jsonplaceholder.typicode.com/posts \\" Enter
-Type "  --json '{\"title\":\"Hello\",\"body\":\"Testing mozzy\",\"userId\":1}' \\" Enter
-Type "  --color"
+Type "mozzy POST https://jsonplaceholder.typicode.com/posts --json "
+Sleep 200ms
+Type `'{`
+Sleep 100ms
+Type `"title":"Hello"`
+Sleep 100ms
+Type `,"body":"Test"`
+Sleep 100ms
+Type `,"userId":1`
+Sleep 100ms
+Type `}' --color`
 Sleep 1s
 Enter
 Sleep 3s
