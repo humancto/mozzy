@@ -473,6 +473,18 @@ If mozzy makes your API testing easier, give it a ⭐️ on GitHub!
 
 **Have a feature request?** [Start a discussion](https://github.com/humancto/mozzy/discussions)
 
+**Enjoying mozzy?** [Buy me a coffee](https://buymeacoffee.com/humancto) ☕
+
+---
+
+## 👨‍💻 About the Author
+
+Built by **Archith Sharma** ([@humancto](https://github.com/humancto)) — a developer passionate about creating tools that make developers' lives easier.
+
+- 🌐 Website: [humancto.com](https://www.humancto.com)
+- ☕ Support: [buymeacoffee.com/humancto](https://buymeacoffee.com/humancto)
+- 💼 GitHub: [@humancto](https://github.com/humancto)
+
 ---
 
 ## 🔗 Links
