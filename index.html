@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="mozzy - Beautiful JSON-native HTTP client for your terminal. Think Postman, but for developers who live in the command line.">
+    <meta name="keywords" content="HTTP client, CLI, terminal, JSON, API testing, curl alternative, REST client">
+    <title>mozzy - Postman for your Terminal 🦣</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 100px 20px 80px;
+            background: radial-gradient(circle at 50% 0%, rgba(59, 142, 234, 0.1) 0%, transparent 50%);
+        }
+
+        .logo {
+            font-family: 'Courier New', monospace;
+            font-size: 72px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00D9FF 0%, #FFB86C 50%, #FF79C6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            letter-spacing: 8px;
+        }
+
+        .tagline {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: #FFB86C;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: #8BE9FD;
+            margin-bottom: 40px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3B8EEA 0%, #4FC1FF 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 142, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 142, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #4FC1FF;
+            border: 2px solid #4FC1FF;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(79, 193, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Terminal Demo */
+        .terminal-section {
+            padding: 60px 20px;
+        }
+
+        .terminal {
+            background: #1e1e1e;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .terminal-header {
+            background: #2d2d2d;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-button.red { background: #ff5f56; }
+        .terminal-button.yellow { background: #ffbd2e; }
+        .terminal-button.green { background: #27c93f; }
+
+        .terminal-body {
+            padding: 30px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #e0e0e0;
+        }
+
+        .terminal-prompt {
+            color: #50FA7B;
+            font-weight: bold;
+        }
+
+        .terminal-command {
+            color: #BD93F9;
+        }
+
+        .terminal-comment {
+            color: #6272A4;
+            font-style: italic;
+        }
+
+        .terminal-output {
+            color: #8BE9FD;
+            margin-left: 0;
+        }
+
+        /* Features Grid */
+        .features-section {
+            padding: 80px 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 42px;
+            margin-bottom: 60px;
+            background: linear-gradient(135deg, #00D9FF 0%, #FF79C6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(79, 193, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(79, 193, 255, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #4FC1FF;
+        }
+
+        .feature-description {
+            color: #b0b0b0;
+            line-height: 1.8;
+        }
+
+        /* Installation Section */
+        .install-section {
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .install-box {
+            background: #1e1e1e;
+            border: 2px solid #3B8EEA;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            text-align: left;
+        }
+
+        .install-title {
+            font-size: 18px;
+            color: #FFB86C;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .install-command {
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: #50FA7B;
+            font-size: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .install-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 40px auto;
+        }
+
+        .install-method {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .install-method-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .install-method-name {
+            font-size: 18px;
+            color: #4FC1FF;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        /* Use Cases */
+        .use-cases-section {
+            padding: 80px 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .use-case {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid;
+            border-radius: 8px;
+            padding: 30px;
+        }
+
+        .use-case.api-testing { border-left-color: #4EC9B0; }
+        .use-case.ci-cd { border-left-color: #3B8EEA; }
+        .use-case.debugging { border-left-color: #FFB86C; }
+        .use-case.workflow { border-left-color: #FF79C6; }
+
+        .use-case-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #4FC1FF;
+        }
+
+        .use-case-description {
+            color: #b0b0b0;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .use-case-code {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 60px 20px 40px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: #4FC1FF;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: #00D9FF;
+        }
+
+        .footer-text {
+            color: #6272A4;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 48px;
+            }
+
+            .tagline {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .terminal-body {
+                font-size: 12px;
+                padding: 20px;
+            }
+        }
+
+        /* Highlight colors */
+        .cyan { color: #00D9FF; }
+        .orange { color: #FFB86C; }
+        .pink { color: #FF79C6; }
+        .green { color: #50FA7B; }
+        .purple { color: #BD93F9; }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="logo">MOZZY</div>
+            <div class="tagline">🦣 Postman for your Terminal</div>
+            <div class="subtitle">Beautiful HTTP client with superpowers</div>
+            <div class="cta-buttons">
+                <a href="https://github.com/humancto/mozzy" class="btn btn-primary">⭐ Star on GitHub</a>
+                <a href="#install" class="btn btn-secondary">📦 Get Started</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Terminal Demo -->
+    <section class="terminal-section">
+        <div class="container">
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-button red"></div>
+                    <div class="terminal-button yellow"></div>
+                    <div class="terminal-button green"></div>
+                </div>
+                <div class="terminal-body">
+                    <div><span class="terminal-prompt">$</span> <span class="terminal-command">mozzy GET https://api.github.com/users/octocat --color</span> <span class="terminal-comment"># Colorized JSON</span></div>
+                    <div class="terminal-output">{</div>
+                    <div class="terminal-output">  "login": "octocat",</div>
+                    <div class="terminal-output">  "name": "The Octocat",</div>
+                    <div class="terminal-output">  "bio": "GitHub's mascot"</div>
+                    <div class="terminal-output">}</div>
+                    <div style="margin-top: 20px;"><span class="terminal-prompt">$</span> <span class="terminal-command">mozzy POST /api/users --json '{"name":"Alice"}' --jq .id</span> <span class="terminal-comment"># Query inline</span></div>
+                    <div class="terminal-output">12345</div>
+                    <div style="margin-top: 20px;"><span class="terminal-prompt">$</span> <span class="terminal-command">mozzy save my-api GET /api --env production</span> <span class="terminal-comment"># Save for later</span></div>
+                    <div class="terminal-output">✅ Request saved to collection: my-api</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">✨ Features That Matter</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3 class="feature-title">Beautiful Output</h3>
+                    <p class="feature-description">Syntax-highlighted JSON with colors that actually make sense. Auto-formatted, easy to read, and pleasing to the eye.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">Inline Querying</h3>
+                    <p class="feature-description">Extract data with JSONPath/JQ-like syntax directly in your request. No pipes, no extra tools—just <code>--jq .data.users[0]</code></p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h3 class="feature-title">Request Collections</h3>
+                    <p class="feature-description">Save and organize your requests. Run them anytime with <code>mozzy exec my-request</code>. Export to curl, Postman, or HTTPie.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3 class="feature-title">Request Chaining</h3>
+                    <p class="feature-description">Capture variables from responses and use them in subsequent requests. Build complex workflows with YAML.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3 class="feature-title">JWT Tools</h3>
+                    <p class="feature-description">Decode, verify, and sign JWTs right from the CLI. Inspect payloads, validate signatures, check expiry.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">JSON Diffing</h3>
+                    <p class="feature-description">Compare two JSON responses side-by-side. See what changed between API versions or environments.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Performance Testing</h3>
+                    <p class="feature-description">Run load tests with <code>mozzy load</code>. Get instant stats on response times, success rates, and throughput.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3 class="feature-title">Smart Retries</h3>
+                    <p class="feature-description">Automatic retry with exponential backoff. Configure retry conditions: 5xx, 429, network errors—you name it.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3 class="feature-title">Environments</h3>
+                    <p class="feature-description">Define environments in <code>.mozzy.json</code>. Switch between dev, staging, and prod with <code>--env</code>.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📜</div>
+                    <h3 class="feature-title">Request History</h3>
+                    <p class="feature-description">Never lose a request. Browse your history, re-run past requests, and export them to your collection.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📦</div>
+                    <h3 class="feature-title">File Uploads</h3>
+                    <p class="feature-description">Upload files with multipart form data. Progress bars, multiple files, and custom field names.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🍪</div>
+                    <h3 class="feature-title">Cookie Management</h3>
+                    <p class="feature-description">Persistent cookie jars for session management. Share authentication across requests automatically.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section id="install" class="install-section">
+        <div class="container">
+            <h2 class="section-title">📦 Installation</h2>
+
+            <div class="install-box">
+                <div class="install-title">Quick Install (Recommended)</div>
+                <div class="install-command">curl -fsSL https://raw.githubusercontent.com/humancto/mozzy/main/install.sh | bash</div>
+            </div>
+
+            <div class="install-methods">
+                <div class="install-method">
+                    <div class="install-method-icon">🍺</div>
+                    <div class="install-method-name">Homebrew</div>
+                    <code>brew tap humancto/mozzy<br>brew install mozzy</code>
+                </div>
+                <div class="install-method">
+                    <div class="install-method-icon">📦</div>
+                    <div class="install-method-name">Go Install</div>
+                    <code>go install github.com/humancto/mozzy@latest</code>
+                </div>
+                <div class="install-method">
+                    <div class="install-method-icon">⬇️</div>
+                    <div class="install-method-name">Direct Download</div>
+                    <code>Download from<br><a href="https://github.com/humancto/mozzy/releases" style="color: #4FC1FF;">GitHub Releases</a></code>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px;">
+                <p style="color: #8BE9FD; font-size: 18px;">Update anytime with:</p>
+                <div class="install-command" style="max-width: 300px; margin: 20px auto; text-align: center;">mozzy update</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <section class="use-cases-section">
+        <div class="container">
+            <h2 class="section-title">💡 Real-World Use Cases</h2>
+
+            <div class="use-case api-testing">
+                <h3 class="use-case-title">🧪 API Testing & Development</h3>
+                <p class="use-case-description">Test your APIs during development with instant, beautiful feedback. No GUI needed—stay in your flow.</p>
+                <div class="use-case-code">
+<span class="terminal-prompt">$</span> <span class="terminal-command">mozzy POST /api/users --json '{"name":"John"}' --verbose</span>
+<span class="terminal-output">⏱  Timing Breakdown:</span>
+<span class="terminal-output">  • DNS Lookup:        2ms</span>
+<span class="terminal-output">  • TCP Connection:    24ms</span>
+<span class="terminal-output">  • TLS Handshake:     30ms</span>
+<span class="terminal-output">  • Server Processing: 83ms</span>
+<span class="terminal-output">  • Total:             139ms</span>
+                </div>
+            </div>
+
+            <div class="use-case ci-cd">
+                <h3 class="use-case-title">🚀 CI/CD Integration</h3>
+                <p class="use-case-description">Run API tests in your pipeline. Exit codes, retries, and JSON querying make it perfect for automation.</p>
+                <div class="use-case-code">
+<span class="terminal-prompt">$</span> <span class="terminal-command">mozzy test workflow.yaml --fail</span>
+<span class="terminal-output">✅ Test 1: Create user - PASSED (124ms)</span>
+<span class="terminal-output">✅ Test 2: Get user - PASSED (45ms)</span>
+<span class="terminal-output">✅ Test 3: Update user - PASSED (89ms)</span>
+<span class="terminal-output">✅ Test 4: Delete user - PASSED (52ms)</span>
+<span class="terminal-output">🎉 All tests passed (4/4) in 310ms</span>
+                </div>
+            </div>
+
+            <div class="use-case debugging">
+                <h3 class="use-case-title">🔍 Debugging & Troubleshooting</h3>
+                <p class="use-case-description">Inspect headers, timing, and responses. Compare API versions with diff. Debug JWT tokens on the fly.</p>
+                <div class="use-case-code">
+<span class="terminal-prompt">$</span> <span class="terminal-command">mozzy jwt decode eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</span>
+<span class="terminal-output">📋 JWT Header:</span>
+<span class="terminal-output">  alg: HS256</span>
+<span class="terminal-output">  typ: JWT</span>
+<span class="terminal-output">📦 JWT Payload:</span>
+<span class="terminal-output">  sub: user123</span>
+<span class="terminal-output">  exp: 2025-12-31 23:59:59 (valid)</span>
+                </div>
+            </div>
+
+            <div class="use-case workflow">
+                <h3 class="use-case-title">🔗 Complex Workflows</h3>
+                <p class="use-case-description">Chain requests together. Capture variables from one response and use them in the next. Build entire test suites.</p>
+                <div class="use-case-code">
+<span class="terminal-comment"># workflow.yaml</span>
+<span style="color: #FFB86C;">steps:</span>
+  <span style="color: #4FC1FF;">- name:</span> Login
+    <span style="color: #4FC1FF;">request:</span> POST /auth/login
+    <span style="color: #4FC1FF;">capture:</span> {token: .access_token}
+
+  <span style="color: #4FC1FF;">- name:</span> Get Profile
+    <span style="color: #4FC1FF;">request:</span> GET /me
+    <span style="color: #4FC1FF;">headers:</span> {Authorization: "Bearer {{token}}"}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/humancto/mozzy" class="footer-link">GitHub</a>
+                <a href="https://github.com/humancto/mozzy/releases" class="footer-link">Releases</a>
+                <a href="https://github.com/humancto/mozzy/blob/main/README.md" class="footer-link">Documentation</a>
+                <a href="https://github.com/humancto/mozzy/issues" class="footer-link">Report Issue</a>
+            </div>
+            <p class="footer-text">Made with ❤️ for humans who live in the terminal</p>
+            <p class="footer-text" style="margin-top: 10px;">© 2025 <a href="https://humancto.com" class="footer-link" style="text-decoration: none;">@humancto</a> • Open Source • MIT License</p>
+        </div>
+    </footer>
+</body>
+</html>
