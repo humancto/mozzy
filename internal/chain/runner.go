@@ -79,7 +79,8 @@ func Run(ctx context.Context, f Flow) error {
 		if err != nil { return err }
 		defer res.Body.Close()
 
-		fmt.Fprintf(os.Stderr, "→ step %d/%d %s %s (%d) in %s\n", i+1, len(f.Steps), method, url, res.StatusCode, ms)
+		fmt.Fprintf(os.Stderr, "\n📋 Step %d/%d: %s\n", i+1, len(f.Steps), s.Name)
+		formatter.PrintStatusLine(method, url, res.StatusCode, ms)
 		if err := formatter.PrintJSONOrText(resBody, ""); err != nil { return err }
 
 		// captures

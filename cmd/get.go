@@ -38,12 +38,15 @@ func runVerb(cmd *cobra.Command, method string, target string, body []byte, isJS
 	defer cancel()
 
 	req := httpclient.Request{
-		Method:  method,
-		URL:     target,
-		Headers: hdrs,
-		Token:   token,
-		Body:    body,
-		JSON:    isJSON,
+		Method:     method,
+		URL:        target,
+		Headers:    hdrs,
+		Token:      token,
+		Body:       body,
+		JSON:       isJSON,
+		Verbose:    verbose,
+		RetryCount: retryCount,
+		CookieJar:  cookieJar,
 	}
 
 	res, resBody, ms, err := httpclient.Do(ctx, req)
@@ -59,12 +62,13 @@ func runVerb(cmd *cobra.Command, method string, target string, body []byte, isJS
 		BodySize:  len(body),
 	})
 
-	fmt.Fprintf(os.Stderr, "→ %s %s (%d) in %s\n", method, target, res.StatusCode, ms)
+	formatter.PrintStatusLine(method, target, res.StatusCode, ms)
+
+	if err := formatter.PrintJSONOrText(resBody, jqQuery); err != nil { return err }
+
 	if failOnErr && res.StatusCode >= 400 {
-		_ = formatter.PrintJSONOrText(resBody, jqQuery) // still show body
 		os.Exit(1)
 	}
-	if err := formatter.PrintJSONOrText(resBody, jqQuery); err != nil { return err }
 
 	// Capture support: --capture name=.json.path
 	caps, _ := cmd.Flags().GetStringArray("capture")
@@ -81,9 +85,11 @@ var getCmd = &cobra.Command{
 	Short: "Send an HTTP GET request",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cmd.Flags().StringArray("capture", nil, "Capture variables: name=.json.path (repeatable)")
 		return runVerb(cmd, "GET", args[0], nil, false)
 	},
 }
 
-func init() { rootCmd.AddCommand(getCmd) }
+func init() {
+	getCmd.Flags().StringArray("capture", nil, "Capture variables: name=.json.path (repeatable)")
+	rootCmd.AddCommand(getCmd)
+}

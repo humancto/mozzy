@@ -19,7 +19,6 @@ var putCmd = &cobra.Command{
 	Short: "Send an HTTP PUT request",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cmd.Flags().StringArray("capture", nil, "Capture variables: name=.json.path (repeatable)")
 		var body []byte
 		if putBodyFile != "" {
 			b, err := os.ReadFile(putBodyFile); if err != nil { return err }
@@ -41,5 +40,6 @@ func init() {
 	putCmd.Flags().StringVar(&putJSON, "json", "", "JSON payload (string or @file.json)")
 	putCmd.Flags().StringVar(&putBodyFile, "file", "", "Raw body from file")
 	putCmd.Flags().StringVar(&putContentType, "content-type", "", "Override Content-Type header")
+	putCmd.Flags().StringArray("capture", nil, "Capture variables: name=.json.path (repeatable)")
 	rootCmd.AddCommand(putCmd)
 }

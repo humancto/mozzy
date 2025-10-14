@@ -19,7 +19,6 @@ var postCmd = &cobra.Command{
 	Short: "Send an HTTP POST request",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cmd.Flags().StringArray("capture", nil, "Capture variables: name=.json.path (repeatable)")
 		var body []byte
 		if postBodyFile != "" {
 			b, err := os.ReadFile(postBodyFile); if err != nil { return err }
@@ -41,5 +40,6 @@ func init() {
 	postCmd.Flags().StringVar(&postJSON, "json", "", "JSON payload (string or @file.json)")
 	postCmd.Flags().StringVar(&postBodyFile, "file", "", "Raw body from file")
 	postCmd.Flags().StringVar(&postContentType, "content-type", "", "Override Content-Type header")
+	postCmd.Flags().StringArray("capture", nil, "Capture variables: name=.json.path (repeatable)")
 	rootCmd.AddCommand(postCmd)
 }

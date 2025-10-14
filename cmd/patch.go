@@ -19,7 +19,6 @@ var patchCmd = &cobra.Command{
 	Short: "Send an HTTP PATCH request",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cmd.Flags().StringArray("capture", nil, "Capture variables: name=.json.path (repeatable)")
 		var body []byte
 		if patchBodyFile != "" {
 			b, err := os.ReadFile(patchBodyFile); if err != nil { return err }
@@ -41,5 +40,6 @@ func init() {
 	patchCmd.Flags().StringVar(&patchJSON, "json", "", "JSON payload (string or @file.json)")
 	patchCmd.Flags().StringVar(&patchBodyFile, "file", "", "Raw body from file")
 	patchCmd.Flags().StringVar(&patchContentType, "content-type", "", "Override Content-Type header")
+	patchCmd.Flags().StringArray("capture", nil, "Capture variables: name=.json.path (repeatable)")
 	rootCmd.AddCommand(patchCmd)
 }

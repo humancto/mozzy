@@ -1,0 +1,82 @@
+project_name: mozzy
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Skip Windows ARM
+    ignore:
+      - goos: windows
+        goarch: arm64
+    binary: mozzy
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - demo.sh
+
+brews:
+  - name: mozzy
+    homepage: https://github.com/humancto/mozzy
+    description: "Postman for your Terminal - Modern HTTP client with colors, workflows, and JWT tools"
+    license: MIT
+    repository:
+      owner: humancto
+      name: homebrew-mozzy
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    folder: Formula
+    install: |
+      bin.install "mozzy"
+    test: |
+      system "#{bin}/mozzy", "--version"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: Bug Fixes
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: humancto
+    name: mozzy
+  name_template: "mozzy v{{.Version}}"
+  prerelease: auto
