@@ -10,30 +10,88 @@ import (
 // RenderBanner renders the mozzy ASCII banner
 func RenderBanner() string {
 	banner := `
-╭─────────────────────────────────────────────────────────╮
-│                                                         │
-│  🦣  MOZZY - Postman for your Terminal                 │
-│      Beautiful HTTP client with superpowers            │
-│                                                         │
-╰─────────────────────────────────────────────────────────╯`
+   __  __    ___    ____  ____  __  __
+  |  \/  |  / _ \  |_  / |_  / \ \/ /
+  | |\/| | | | | |  / /   / /   \  /
+  | |  | | | |_| | / /_  / /_   /  \
+  |_|  |_|  \___/ /____||____| /_/\_\
 
-	bannerStyle := lipgloss.NewStyle().
-		Foreground(ColorPrimary).
+  🦣  Postman for your Terminal
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Beautiful HTTP client with superpowers
+  `
+
+	// Create gradient effect with different colors
+	titleStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#00D9FF")). // Bright cyan
 		Bold(true)
 
-	return bannerStyle.Render(banner)
+	subtitleStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FFB86C")). // Orange
+		Italic(true)
+
+	descStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#8BE9FD")) // Light cyan
+
+	lines := strings.Split(banner, "\n")
+	var result strings.Builder
+
+	for i, line := range lines {
+		if i >= 1 && i <= 5 {
+			// ASCII art lines
+			result.WriteString(titleStyle.Render(line))
+		} else if i == 7 {
+			// Emoji and title line
+			result.WriteString(subtitleStyle.Render(line))
+		} else if i == 8 {
+			// Separator line
+			result.WriteString(lipgloss.NewStyle().Foreground(ColorBorder).Render(line))
+		} else if i == 9 {
+			// Description
+			result.WriteString(descStyle.Render(line))
+		} else {
+			result.WriteString(line)
+		}
+		result.WriteString("\n")
+	}
+
+	return result.String()
 }
 
 // RenderQuickStart renders quick start examples
 func RenderQuickStart() string {
-	title := TitleStyle.Render("Quick Start")
+	promptStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#50FA7B")). // Green
+		Bold(true)
+
+	commandStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#BD93F9")) // Purple
+
+	commentStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#6272A4")). // Gray
+		Italic(true)
+
+	title := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FF79C6")). // Pink
+		Bold(true).
+		Render("⚡ Quick Start")
+
 	examples := []string{
-		CodeStyle.Render("mozzy GET https://api.example.com --color"),
-		CodeStyle.Render("mozzy POST /users --json '{\"name\":\"Alice\"}'"),
-		CodeStyle.Render("mozzy save my-request GET /api"),
+		fmt.Sprintf("%s %s  %s",
+			promptStyle.Render("$"),
+			commandStyle.Render("mozzy GET https://api.example.com --color"),
+			commentStyle.Render("# Colorized JSON")),
+		fmt.Sprintf("%s %s  %s",
+			promptStyle.Render("$"),
+			commandStyle.Render("mozzy POST /users --json '{\"name\":\"Alice\"}'"),
+			commentStyle.Render("# Send JSON data")),
+		fmt.Sprintf("%s %s  %s",
+			promptStyle.Render("$"),
+			commandStyle.Render("mozzy save my-api GET /api"),
+			commentStyle.Render("# Save for later")),
 	}
 
-	return fmt.Sprintf("%s\n  %s\n", title, strings.Join(examples, "\n  "))
+	return fmt.Sprintf("\n%s\n  %s\n", title, strings.Join(examples, "\n  "))
 }
 
 // RenderCommandGroup renders a group of commands with a title

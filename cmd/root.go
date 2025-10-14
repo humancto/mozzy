@@ -29,6 +29,12 @@ var rootCmd = &cobra.Command{
 	Use:   "mozzy",
 	Short: "mozzy: Postman-level JSON HTTP client for your terminal",
 	Long:  ui.RenderBanner() + "\n\nmozzy is a JSON-native HTTP client with pretty output, inline querying, JWT tools, history, and request chaining.\n\n" + ui.RenderQuickStart(),
+	Run: func(cmd *cobra.Command, args []string) {
+		// Show help when no args provided
+		cmd.Help()
+		fmt.Println("\n" + ui.InfoStyle.Render("💡 Tip: Try 'mozzy GET https://jsonplaceholder.typicode.com/users/1 --color' for a quick demo"))
+		fmt.Println(ui.DimStyle.Render("   Run 'mozzy update' to check for new versions"))
+	},
 }
 
 func Execute() {
