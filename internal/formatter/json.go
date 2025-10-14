@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 
 	"github.com/fatih/color"
-	"golang.org/x/term"
 )
 
 func PrintJSONOrText(b []byte, jqQuery string) error {
@@ -34,64 +32,93 @@ func PrintJSONOrText(b []byte, jqQuery string) error {
 }
 
 func colorizeJSON(jsonStr string) {
-	// Check if colors should be disabled
-	// Allow CLICOLOR_FORCE to override TTY check
-	forceColor := os.Getenv("CLICOLOR_FORCE") != "" && os.Getenv("CLICOLOR_FORCE") != "0"
-	isTTY := term.IsTerminal(int(os.Stdout.Fd()))
-
-	// Disable colors if:
-	// - NO_COLOR is set
-	// - Not a TTY (unless forced)
-	// - color.NoColor flag is set
-	shouldDisableColors := color.NoColor || (!isTTY && !forceColor)
-
-	if shouldDisableColors {
+	if color.NoColor {
 		fmt.Println(jsonStr)
 		return
 	}
 
+	// Define colors
+	cyan := color.New(color.FgCyan, color.Bold)
+	green := color.New(color.FgGreen)
+	yellow := color.New(color.FgYellow)
+	magenta := color.New(color.FgMagenta)
+	red := color.New(color.FgRed)
+	white := color.New(color.FgWhite, color.Bold)
+
 	lines := strings.Split(jsonStr, "\n")
 
-	// Direct ANSI color codes for maximum compatibility
-	const (
-		cyan    = "\033[36;1m"
-		green   = "\033[32m"
-		yellow  = "\033[33m"
-		magenta = "\033[35m"
-		red     = "\033[31m"
-		white   = "\033[37;1m"
-		reset   = "\033[0m"
-	)
-
-	// Regex patterns
-	keyPattern := regexp.MustCompile(`("[\w\-\.]+"):`)
-	stringPattern := regexp.MustCompile(`: ("[^"]*")`)
-	numberPattern := regexp.MustCompile(`: (-?\d+\.?\d*([eE][+-]?\d+)?)`)
-	boolPattern := regexp.MustCompile(`: (true|false)`)
-	nullPattern := regexp.MustCompile(`: (null)`)
+	// Patterns to identify JSON components
+	keyPattern := regexp.MustCompile(`^(\s*)"([^"]+)":`)
+	stringPattern := regexp.MustCompile(`"([^"]*)"`)
+	numberPattern := regexp.MustCompile(`-?\d+\.?\d*([eE][+-]?\d+)?`)
+	boolPattern := regexp.MustCompile(`\b(true|false)\b`)
+	nullPattern := regexp.MustCompile(`\bnull\b`)
 
 	for _, line := range lines {
-		// Colorize keys
-		line = keyPattern.ReplaceAllString(line, cyan+"$1"+reset+":")
+		// Extract leading whitespace
+		leadingSpace := ""
+		trimmed := strings.TrimLeft(line, " ")
+		if len(line) > len(trimmed) {
+			leadingSpace = line[:len(line)-len(trimmed)]
+		}
 
-		// Colorize string values
-		line = stringPattern.ReplaceAllString(line, ": "+green+"$1"+reset)
+		// Check if line has a key
+		if keyPattern.MatchString(line) {
+			matches := keyPattern.FindStringSubmatch(line)
+			if len(matches) >= 3 {
+				// Print: whitespace + colored key + colon
+				fmt.Print(matches[1])
+				cyan.Printf("\"%s\"", matches[2])
+				fmt.Print(":")
 
-		// Colorize numbers
-		line = numberPattern.ReplaceAllString(line, ": "+yellow+"$1"+reset)
+				// Get the rest of the line after the key
+				rest := line[len(matches[0]):]
+				printColoredValue(rest, green, yellow, magenta, red, white, stringPattern, numberPattern, boolPattern, nullPattern)
+				fmt.Println()
+				continue
+			}
+		}
 
-		// Colorize booleans
-		line = boolPattern.ReplaceAllString(line, ": "+magenta+"$1"+reset)
+		// No key, just print the line with appropriate colors
+		fmt.Print(leadingSpace)
+		printColoredValue(strings.TrimLeft(line, " "), green, yellow, magenta, red, white, stringPattern, numberPattern, boolPattern, nullPattern)
+		fmt.Println()
+	}
+}
 
-		// Colorize null
-		line = nullPattern.ReplaceAllString(line, ": "+red+"$1"+reset)
+func printColoredValue(s string, green, yellow, magenta, red, white *color.Color, stringPattern, numberPattern, boolPattern, nullPattern *regexp.Regexp) {
+	s = strings.TrimSpace(s)
 
-		// Colorize brackets and braces
-		line = strings.ReplaceAll(line, "{", white+"{"+reset)
-		line = strings.ReplaceAll(line, "}", white+"}"+reset)
-		line = strings.ReplaceAll(line, "[", white+"["+reset)
-		line = strings.ReplaceAll(line, "]", white+"]"+reset)
+	// Check for brackets/braces first
+	if s == "{" || s == "}" || s == "[" || s == "]" {
+		white.Print(s)
+		return
+	}
 
-		fmt.Println(line)
+	// Remove trailing comma if exists
+	hasComma := strings.HasSuffix(s, ",")
+	if hasComma {
+		s = strings.TrimSuffix(s, ",")
+		s = strings.TrimSpace(s)
+	}
+
+	// Check what type of value this is
+	if stringPattern.MatchString(s) && strings.HasPrefix(s, "\"") {
+		green.Print(s)
+	} else if boolPattern.MatchString(s) {
+		magenta.Print(s)
+	} else if nullPattern.MatchString(s) {
+		red.Print(s)
+	} else if numberPattern.MatchString(s) {
+		yellow.Print(s)
+	} else if s == "{" || s == "}" {
+		white.Print(s)
+	} else {
+		// Default: print as-is
+		fmt.Print(s)
+	}
+
+	if hasComma {
+		fmt.Print(",")
 	}
 }
