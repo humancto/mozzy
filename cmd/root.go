@@ -6,6 +6,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/humancto/mozzy/internal/ui"
 )
 
@@ -45,6 +46,11 @@ func Execute() {
 }
 
 func init() {
+	// Custom help template with colors
+	rootCmd.SetHelpTemplate(`{{with (or .Long .Short)}}{{. | trimTrailingWhitespaces}}
+
+{{end}}{{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}`)
+
 	rootCmd.PersistentFlags().StringVar(&baseURL, "base", "", "Base URL, e.g. https://api.example.com (overridden by --env)")
 	rootCmd.PersistentFlags().StringVar(&authToken, "auth", "", "Bearer token (Authorization: Bearer ...)")
 	rootCmd.PersistentFlags().StringSliceVar(&headers, "header", nil, "Extra headers (repeat), e.g. --header 'X-Env: staging'")
@@ -59,6 +65,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&retryCondition, "retry-on", "", "Retry condition: 5xx, 429, >=500, network_error, etc. (comma-separated)")
 	rootCmd.PersistentFlags().StringVar(&cookieJar, "cookie-jar", "", "File to store/load cookies for session management")
 
+	// Custom usage template with colors
+	rootCmd.SetUsageFunc(customUsage)
+
 	// Auto-detect color support - disable if:
 	// 1. --no-color flag is set
 	// 2. NO_COLOR env var exists
@@ -72,4 +81,89 @@ func init() {
 			os.Setenv("CLICOLOR_FORCE", "1")
 		}
 	})
+}
+
+func customUsage(cmd *cobra.Command) error {
+	out := cmd.OutOrStdout()
+
+	// Style definitions using lipgloss for beautiful output
+	sectionStyle := ui.TitleStyle.Copy().
+		MarginTop(1).
+		MarginBottom(1)
+
+	cmdNameStyle := ui.CodeStyle.Copy().
+		Bold(true).
+		Width(15)
+
+	flagNameStyle := ui.SuccessStyle.Copy().
+		Width(28)
+
+	descStyle := ui.DimStyle
+
+	usageStyle := ui.InfoStyle.Copy().
+		Italic(true)
+
+	// Usage section
+	fmt.Fprintf(out, "\n%s\n", sectionStyle.Render("📋 Usage"))
+	if cmd.Runnable() {
+		fmt.Fprintf(out, "  %s %s\n", cmd.CommandPath(), usageStyle.Render("[flags]"))
+	}
+	if cmd.HasAvailableSubCommands() {
+		fmt.Fprintf(out, "  %s %s\n", cmd.CommandPath(), usageStyle.Render("[command]"))
+	}
+
+	// Available Commands section
+	if cmd.HasAvailableSubCommands() {
+		fmt.Fprintf(out, "\n%s\n", sectionStyle.Render("⚡ Available Commands"))
+		for _, c := range cmd.Commands() {
+			if !c.IsAvailableCommand() {
+				continue
+			}
+			fmt.Fprintf(out, "  %s %s\n",
+				cmdNameStyle.Render(c.Name()),
+				descStyle.Render(c.Short))
+		}
+	}
+
+	// Flags section
+	if cmd.HasAvailableLocalFlags() {
+		fmt.Fprintf(out, "\n%s\n", sectionStyle.Render("🚩 Flags"))
+		cmd.LocalFlags().VisitAll(func(f *pflag.Flag) {
+			if f.Hidden {
+				return
+			}
+			flagName := "--" + f.Name
+			if f.Shorthand != "" && f.ShorthandDeprecated == "" {
+				flagName = fmt.Sprintf("-%s, --%s", f.Shorthand, f.Name)
+			}
+			fmt.Fprintf(out, "  %s %s\n",
+				flagNameStyle.Render(flagName),
+				descStyle.Render(f.Usage))
+		})
+	}
+
+	// Global Flags section
+	if cmd.HasAvailableInheritedFlags() {
+		fmt.Fprintf(out, "\n%s\n", sectionStyle.Render("🌐 Global Flags"))
+		cmd.InheritedFlags().VisitAll(func(f *pflag.Flag) {
+			if f.Hidden {
+				return
+			}
+			flagName := "--" + f.Name
+			if f.Shorthand != "" && f.ShorthandDeprecated == "" {
+				flagName = fmt.Sprintf("-%s, --%s", f.Shorthand, f.Name)
+			}
+			fmt.Fprintf(out, "  %s %s\n",
+				flagNameStyle.Render(flagName),
+				descStyle.Render(f.Usage))
+		})
+	}
+
+	// Footer
+	if cmd.HasSubCommands() {
+		fmt.Fprintf(out, "\n%s\n",
+			descStyle.Render(fmt.Sprintf("Use \"%s [command] --help\" for more information about a command.", cmd.CommandPath())))
+	}
+
+	return nil
 }
