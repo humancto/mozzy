@@ -1,0 +1,42 @@
+name: Conditional Workflow Example
+description: Demonstrates on_success and on_failure branching
+
+steps:
+  - name: check_api_health
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users/1
+    on_success: fetch_data
+    on_failure: retry_health_check
+
+  - name: retry_health_check
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users/1
+    on_success: fetch_data
+    on_failure: error_handler
+
+  - name: fetch_data
+    method: GET
+    url: https://jsonplaceholder.typicode.com/posts?userId=1
+    capture:
+      postId: .[0].id
+    on_success: process_data
+    on_failure: error_handler
+
+  - name: process_data
+    method: GET
+    url: https://jsonplaceholder.typicode.com/posts/{{postId}}
+    assert:
+      - status == 200
+      - .id == {{postId}}
+    on_success: cleanup
+    on_failure: error_handler
+
+  - name: error_handler
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users/1
+    on_success: stop
+    on_failure: stop
+
+  - name: cleanup
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users/1

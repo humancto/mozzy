@@ -13,14 +13,16 @@ import (
 )
 
 type Step struct {
-	Name    string            `yaml:"name"`
-	Method  string            `yaml:"method"`
-	URL     string            `yaml:"url"`
-	Headers map[string]string `yaml:"headers,omitempty"`
-	JSON    any               `yaml:"json,omitempty"`
-	File    string            `yaml:"file,omitempty"`
-	Capture map[string]string `yaml:"capture,omitempty"`
-	Assert  []string          `yaml:"assert,omitempty"` // future: assertions
+	Name      string            `yaml:"name"`
+	Method    string            `yaml:"method"`
+	URL       string            `yaml:"url"`
+	Headers   map[string]string `yaml:"headers,omitempty"`
+	JSON      any               `yaml:"json,omitempty"`
+	File      string            `yaml:"file,omitempty"`
+	Capture   map[string]string `yaml:"capture,omitempty"`
+	Assert    []string          `yaml:"assert,omitempty"`
+	OnSuccess string            `yaml:"on_success,omitempty"` // Step name or "continue" (default) or "stop"
+	OnFailure string            `yaml:"on_failure,omitempty"` // Step name or "stop" (default) or "continue"
 }
 
 type Flow struct {
@@ -37,7 +39,18 @@ type Flow struct {
 
 func Run(ctx context.Context, f Flow) error {
 	base := vars.ResolveBase(f.BaseURL, firstNonEmpty(f.EnvName, f.Env))
+
+	// Build step name index for jumps
+	stepIndex := make(map[string]int)
 	for i, s := range f.Steps {
+		stepIndex[s.Name] = i
+	}
+
+	i := 0
+	for i < len(f.Steps) {
+		s := f.Steps[i]
+		stepSuccess := true
+
 		method := strings.ToUpper(s.Method)
 		url := s.URL
 		if base != "" && strings.HasPrefix(url, "/") {
@@ -60,12 +73,26 @@ func Run(ctx context.Context, f Flow) error {
 		var isJSON bool
 		switch {
 		case s.File != "":
-			b, err := os.ReadFile(s.File); if err != nil { return err }
+			b, err := os.ReadFile(s.File)
+			if err != nil {
+				stepSuccess = false
+				if nextStep := handleStepResult(i, s, false, stepIndex); nextStep >= 0 {
+					i = nextStep
+					continue
+				}
+				return err
+			}
 			body = b
 		case s.JSON != nil:
-			// serialize inside httpclient when JSON flag set in future;
-			// for now keep this simple by marshalling in formatter helper
-			b, err := formatter.MarshalJSON(s.JSON); if err != nil { return err }
+			b, err := formatter.MarshalJSON(s.JSON)
+			if err != nil {
+				stepSuccess = false
+				if nextStep := handleStepResult(i, s, false, stepIndex); nextStep >= 0 {
+					i = nextStep
+					continue
+				}
+				return err
+			}
 			body = b
 			isJSON = true
 		}
@@ -78,12 +105,26 @@ func Run(ctx context.Context, f Flow) error {
 			Body:    body,
 			JSON:    isJSON,
 		})
-		if err != nil { return err }
+		if err != nil {
+			stepSuccess = false
+			fmt.Fprintf(os.Stderr, "\n📋 Step %d/%d: %s\n", i+1, len(f.Steps), s.Name)
+			fmt.Fprintf(os.Stderr, "❌ Request failed: %v\n", err)
+			if nextStep := handleStepResult(i, s, false, stepIndex); nextStep >= 0 {
+				i = nextStep
+				continue
+			}
+			return err
+		}
 		defer res.Body.Close()
 
 		fmt.Fprintf(os.Stderr, "\n📋 Step %d/%d: %s\n", i+1, len(f.Steps), s.Name)
 		formatter.PrintStatusLine(method, url, res.StatusCode, ms)
 		if err := formatter.PrintJSONOrText(resBody, ""); err != nil { return err }
+
+		// Check HTTP status
+		if res.StatusCode >= 400 {
+			stepSuccess = false
+		}
 
 		// captures
 		for name, path := range s.Capture {
@@ -110,12 +151,56 @@ func Run(ctx context.Context, f Flow) error {
 				}
 			}
 			if !allPassed {
+				stepSuccess = false
+				fmt.Fprintf(os.Stderr, "❌ Assertions failed\n")
+				if nextStep := handleStepResult(i, s, false, stepIndex); nextStep >= 0 {
+					i = nextStep
+					continue
+				}
 				return fmt.Errorf("❌ assertions failed for step: %s", s.Name)
 			}
 			fmt.Fprintf(os.Stderr, "✅ All assertions passed\n")
 		}
+
+		// Handle conditional execution
+		nextStep := handleStepResult(i, s, stepSuccess, stepIndex)
+		if nextStep < 0 {
+			break // Stop execution
+		}
+		i = nextStep
 	}
 	return nil
+}
+
+// handleStepResult determines the next step based on success/failure and on_success/on_failure
+// Returns -1 to stop execution, or the index of the next step
+func handleStepResult(currentIndex int, step Step, success bool, stepIndex map[string]int) int {
+	var action string
+	if success {
+		action = step.OnSuccess
+		if action == "" {
+			action = "continue" // Default: continue to next step
+		}
+	} else {
+		action = step.OnFailure
+		if action == "" {
+			action = "stop" // Default: stop on failure
+		}
+	}
+
+	switch action {
+	case "continue":
+		return currentIndex + 1
+	case "stop":
+		return -1
+	default:
+		// Jump to named step
+		if idx, exists := stepIndex[action]; exists {
+			return idx
+		}
+		fmt.Fprintf(os.Stderr, "⚠️  Unknown step reference: %q, continuing...\n", action)
+		return currentIndex + 1
+	}
 }
 
 func hasAuthHeader(h []string) bool {

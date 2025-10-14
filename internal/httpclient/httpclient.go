@@ -14,18 +14,20 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/humancto/mozzy/internal/retry"
 )
 
 type Request struct {
-	Method    string
-	URL       string
-	Headers   []string // "Key: Value"
-	Token     string
-	Body      []byte
-	JSON      bool
-	Verbose   bool
-	RetryCount int
-	CookieJar string
+	Method         string
+	URL            string
+	Headers        []string // "Key: Value"
+	Token          string
+	Body           []byte
+	JSON           bool
+	Verbose        bool
+	RetryCount     int
+	RetryCondition string // e.g., "5xx", ">=500", "429,5xx"
+	CookieJar      string
 }
 
 type TimingInfo struct {
@@ -45,6 +47,17 @@ func Do(ctx context.Context, r Request) (*http.Response, []byte, time.Duration, 
 	var body []byte
 	var err error
 
+	// Parse retry conditions
+	conditions, parseErr := retry.ParseConditions(r.RetryCondition)
+	if parseErr != nil {
+		return nil, nil, 0, fmt.Errorf("invalid retry condition: %w", parseErr)
+	}
+
+	policy := &retry.Policy{
+		MaxRetries: r.RetryCount,
+		Conditions: conditions,
+	}
+
 	// Retry logic with exponential backoff
 	maxRetries := r.RetryCount
 	if maxRetries < 0 {
@@ -62,14 +75,26 @@ func Do(ctx context.Context, r Request) (*http.Response, []byte, time.Duration, 
 
 		res, body, timings, err = doRequest(ctx, r)
 
-		// Success or non-retryable error
-		if err == nil && res.StatusCode < 500 {
+		// Check if we should retry based on policy
+		shouldRetry := false
+		if attempt < maxRetries {
+			if err != nil {
+				shouldRetry = policy.ShouldRetry(0, err)
+			} else {
+				shouldRetry = policy.ShouldRetry(res.StatusCode, nil)
+			}
+		}
+
+		if !shouldRetry {
 			break
 		}
 
-		// Last attempt failed
-		if attempt == maxRetries {
-			break
+		if r.Verbose && shouldRetry {
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "❌ Request failed: %v\n", err)
+			} else {
+				fmt.Fprintf(os.Stderr, "❌ Status %d matches retry condition\n", res.StatusCode)
+			}
 		}
 	}
 

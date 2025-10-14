@@ -186,11 +186,11 @@ mozzy GET /profile --auth "{{token}}"
 
 ### ⚙️ YAML Workflows
 
-Automate multi-step API flows:
+Automate multi-step API flows with conditional execution:
 
 **workflow.yaml:**
 ```yaml
-name: User Onboarding Flow
+name: User Onboarding Flow with Error Handling
 steps:
   - name: Create user
     method: POST
@@ -198,19 +198,34 @@ steps:
     json: {"name": "Alice", "email": "alice@example.com"}
     capture:
       userId: .id
+    on_success: send_email
+    on_failure: error_handler
 
-  - name: Send welcome email
+  - name: send_email
     method: POST
     url: https://api.example.com/emails
     json:
       to: "alice@example.com"
       template: "welcome"
       userId: "{{userId}}"
+    assert:
+      - status == 200
+    on_success: continue
+    on_failure: error_handler
+
+  - name: error_handler
+    method: POST
+    url: https://api.example.com/errors
+    json: {"message": "Onboarding failed"}
 ```
 
 ```bash
 mozzy run workflow.yaml
 ```
+
+**Conditional Execution:**
+- `on_success`: continue (default), stop, or jump to step name
+- `on_failure`: stop (default), continue, or jump to step name
 
 ### 🔐 JWT Tools
 
@@ -289,10 +304,16 @@ mozzy GET /api/users --verbose
 # - Timing breakdown (DNS, TLS, server, transfer)
 ```
 
-**Retry Logic:**
+**Retry Logic with Conditions:**
 ```bash
-# Retry on failure with exponential backoff
+# Retry on failure with exponential backoff (default: 5xx errors)
 mozzy GET /flaky-endpoint --retry 3
+
+# Retry on specific conditions
+mozzy GET /api/data --retry 5 --retry-on "429,5xx"  # Rate limit + server errors
+mozzy GET /api/data --retry 3 --retry-on ">=500"    # Any status >= 500
+mozzy GET /api/data --retry 3 --retry-on "503"      # Only 503
+mozzy GET /api/data --retry 3 --retry-on "network_error"  # Network failures only
 ```
 
 **Cookie Jar:**
@@ -427,6 +448,7 @@ mozzy run onboarding.yaml
 | `--no-color` | Disable colored output |
 | `--verbose` / `-v` | Show headers & timing |
 | `--retry <n>` | Retry attempts with backoff |
+| `--retry-on <cond>` | Retry conditions (5xx, 429, >=500, etc.) |
 | `--cookie-jar <file>` | Cookie persistence file |
 | `--capture <name=path>` | Capture variable (repeatable) |
 
@@ -440,6 +462,10 @@ mozzy run onboarding.yaml
 | `exec <name>` | Execute saved request |
 | `history` | Show request history |
 | `run <workflow.yaml>` | Run YAML workflow |
+| `test <workflow.yaml>` | Run workflow as test suite |
+| `diff <file1> <file2>` | Compare JSON responses |
+| `load <url>` | Performance load testing |
+| `export <name>` | Export to curl/Postman |
 | `env` | List environments |
 | `jwt decode <token>` | Decode JWT |
 | `jwt verify <token>` | Verify JWT |

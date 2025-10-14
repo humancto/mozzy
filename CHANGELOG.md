@@ -5,6 +5,31 @@ All notable changes to mozzy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-10-14
+
+### Added
+- **Conditional Retry** - `--retry-on` flag for fine-grained retry control
+  - Retry on specific status codes (`--retry-on "503"`)
+  - Retry on status ranges (`--retry-on "5xx"`, `--retry-on ">=500"`)
+  - Retry on multiple conditions (`--retry-on "429,5xx,network_error"`)
+  - Comparison operators: `>=`, `<=`, `>`, `<`, `==`, `!=`
+  - Special conditions: `always`, `never`, `network_error`
+- **Schema Validation** - Validate JSON responses against JSON Schema
+  - Support for type validation (string, number, integer, boolean, array, object)
+  - Object property validation with required fields
+  - Nested object and array validation
+  - String constraints (minLength, maxLength)
+  - Number constraints (minimum, maximum)
+  - Enum validation
+  - Additional properties control
+- **Conditional Workflows** - Control flow in YAML workflows
+  - `on_success`: action to take on step success (continue, stop, or jump to step)
+  - `on_failure`: action to take on step failure (stop, continue, or jump to step)
+  - Enables retry loops, error handling, and complex branching logic
+  - Default behavior: continue on success, stop on failure
+- Comprehensive test suites for all new features (100+ tests)
+- Example workflows and usage scripts
+
 ## [1.2.0] - 2025-10-14
 
 ### Added
@@ -84,6 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cookie jar support
 - Retry with exponential backoff
 
+[1.3.0]: https://github.com/humancto/mozzy/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/humancto/mozzy/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/humancto/mozzy/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/humancto/mozzy/compare/v1.0.1...v1.0.2

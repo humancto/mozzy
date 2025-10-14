@@ -1,0 +1,27 @@
+name: Retry Loop with Conditional Branching
+description: Example showing how to implement a retry loop using on_failure
+
+steps:
+  - name: try_api_call
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users/999  # This will fail (404)
+    on_success: success_handler
+    on_failure: check_retry_count
+
+  - name: check_retry_count
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users/1  # Use valid endpoint to check
+    capture:
+      retryCount: .id  # Simulate retry counter
+    on_success: try_api_call  # Jump back to retry (in real use, add retry limit logic)
+    on_failure: error_handler
+
+  - name: success_handler
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users/1
+    on_success: stop
+
+  - name: error_handler
+    method: GET
+    url: https://jsonplaceholder.typicode.com/users/1
+    on_success: stop

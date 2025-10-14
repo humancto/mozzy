@@ -38,15 +38,16 @@ func runVerb(cmd *cobra.Command, method string, target string, body []byte, isJS
 	defer cancel()
 
 	req := httpclient.Request{
-		Method:     method,
-		URL:        target,
-		Headers:    hdrs,
-		Token:      token,
-		Body:       body,
-		JSON:       isJSON,
-		Verbose:    verbose,
-		RetryCount: retryCount,
-		CookieJar:  cookieJar,
+		Method:         method,
+		URL:            target,
+		Headers:        hdrs,
+		Token:          token,
+		Body:           body,
+		JSON:           isJSON,
+		Verbose:        verbose,
+		RetryCount:     retryCount,
+		RetryCondition: retryCondition,
+		CookieJar:      cookieJar,
 	}
 
 	res, resBody, ms, err := httpclient.Do(ctx, req)

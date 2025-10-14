@@ -9,18 +9,19 @@ import (
 )
 
 var (
-	baseURL    string
-	authToken  string
-	headers    []string
-	envName    string
-	jqQuery    string
-	timeoutStr string
-	failOnErr  bool
-	noColor    bool
-	forceColor bool
-	verbose    bool
-	retryCount int
-	cookieJar  string
+	baseURL        string
+	authToken      string
+	headers        []string
+	envName        string
+	jqQuery        string
+	timeoutStr     string
+	failOnErr      bool
+	noColor        bool
+	forceColor     bool
+	verbose        bool
+	retryCount     int
+	retryCondition string
+	cookieJar      string
 )
 
 var rootCmd = &cobra.Command{
@@ -48,6 +49,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&forceColor, "color", false, "Force colored output even when not in a TTY")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Show request/response headers and timing details")
 	rootCmd.PersistentFlags().IntVar(&retryCount, "retry", 0, "Number of retry attempts on failure (with exponential backoff)")
+	rootCmd.PersistentFlags().StringVar(&retryCondition, "retry-on", "", "Retry condition: 5xx, 429, >=500, network_error, etc. (comma-separated)")
 	rootCmd.PersistentFlags().StringVar(&cookieJar, "cookie-jar", "", "File to store/load cookies for session management")
 
 	// Auto-detect color support - disable if:
