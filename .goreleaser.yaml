@@ -44,15 +44,14 @@ archives:
       - demo.sh
 
 brews:
-  - name: mozzy
-    homepage: https://github.com/humancto/mozzy
-    description: "Postman for your Terminal - Modern HTTP client with colors, workflows, and JWT tools"
-    license: MIT
-    repository:
+  - repository:
       owner: humancto
       name: homebrew-mozzy
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    folder: Formula
+    directory: Formula
+    homepage: https://github.com/humancto/mozzy
+    description: "Postman for your Terminal - Modern HTTP client with colors, workflows, and JWT tools"
+    license: MIT
     install: |
       bin.install "mozzy"
     test: |
