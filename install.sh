@@ -27,8 +27,15 @@ fi
 echo "Detected platform: $PLATFORM"
 echo ""
 
-# Download URL
-VERSION="1.5.0"
+# Download URL - fetch latest version from GitHub
+echo "Fetching latest version..."
+VERSION=$(curl -s https://api.github.com/repos/humancto/mozzy/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+
+if [ -z "$VERSION" ]; then
+    echo "⚠️  Could not fetch latest version, using fallback"
+    VERSION="1.6.0"
+fi
+
 URL="https://github.com/humancto/mozzy/releases/download/v${VERSION}/mozzy_${VERSION}_${PLATFORM}.tar.gz"
 
 echo "Downloading mozzy v${VERSION}..."
