@@ -53,8 +53,11 @@ curl -fsSL https://raw.githubusercontent.com/humancto/mozzy/main/install.sh | ba
 ### Homebrew
 
 ```bash
+# Tap the repository
 brew tap humancto/mozzy
-brew install mozzy
+
+# Install (use full path to avoid typos)
+brew install humancto/mozzy/mozzy
 ```
 
 ### From Binary
