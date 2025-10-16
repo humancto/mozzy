@@ -5,6 +5,48 @@ All notable changes to mozzy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2025-10-16
+
+### Added
+- **HTTPS Proxy Support** (Phase 2) - Full SSL/TLS interception for HTTPS traffic
+  - `--https` flag enables HTTPS interception mode
+  - Automatic CA certificate generation and management in `~/.mozzy/`
+  - Dynamic per-host certificate generation and caching
+  - TLS handshake handling with man-in-the-middle proxy
+  - `--export-cert` flag to export CA certificate for installation
+  - `--cert-info` flag to view CA certificate details
+  - Seamless integration with existing HTTP proxy
+  - Verbose mode shows TLS handshake progress
+  - Certificate valid for 10 years (CA) and 1 year (per-host)
+
+### Technical Details
+- Self-signed CA certificate generated using 2048-bit RSA keys
+- Per-host certificates signed by CA and cached for performance
+- CONNECT method handling for TLS tunnel establishment
+- Proper certificate chain (host cert + CA cert) for client validation
+- No external dependencies required
+
+### Examples
+```bash
+mozzy proxy 8888 --https              # Start HTTPS proxy
+mozzy proxy --export-cert > mozzy-ca.pem  # Export CA certificate
+mozzy proxy --cert-info               # View certificate info
+
+# Use with curl
+curl -x http://localhost:8888 --cacert mozzy-ca.pem https://api.example.com
+
+# Configure browser (after installing CA certificate)
+HTTPS Proxy: localhost:8888
+Port: 8888
+```
+
+### Installation Guide
+To use HTTPS interception, you must install the CA certificate:
+1. Export: `mozzy proxy --export-cert > mozzy-ca.pem`
+2. macOS: Add to Keychain Access and mark as trusted
+3. Linux: Add to `/usr/local/share/ca-certificates/` and run `update-ca-certificates`
+4. Windows: Import into Trusted Root Certification Authorities
+
 ## [1.12.0] - 2025-10-16
 
 ### Added
@@ -328,6 +370,7 @@ mozzy version             # Show current version
 - Cookie jar support
 - Retry with exponential backoff
 
+[1.13.0]: https://github.com/humancto/mozzy/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/humancto/mozzy/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/humancto/mozzy/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/humancto/mozzy/compare/v1.10.0...v1.10.1
