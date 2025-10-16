@@ -33,6 +33,7 @@ mozzy GET https://api.github.com/users/torvalds --jq .name --color
 - 🔗 **API chaining** - Capture values and use them in next requests
 - ⚙️ **Workflows** - Multi-step API flows in YAML
 - 🔐 **JWT superpowers** - Decode, verify, sign JWTs instantly
+- 📊 **Performance grading** - A-F grades for DNS, TCP, TLS, TTFB with optimization tips
 - 🚀 **Dev-friendly** - Built by developers, for developers
 
 ### mozzy vs The Rest
@@ -46,6 +47,7 @@ mozzy GET https://api.github.com/users/torvalds --jq .name --color
 | API Chaining | ❌ | ❌ | ⚠️ | ✅ |
 | JWT Tools Built-in | ❌ | ❌ | ❌ | ✅ |
 | Request History | ❌ | ❌ | ✅ | ✅ |
+| Performance Grading | ❌ | ❌ | ⚠️ | ✅ |
 | CLI First | ✅ | ✅ | ❌ | ✅ |
 | Free & Open Source | ✅ | ✅ | 💰 | ✅ |
 | Easy to Learn | ❌ | ✅ | ✅ | ✅ |
@@ -308,7 +310,7 @@ mozzy history --json
 
 ### 🔧 Advanced Features
 
-**Enhanced Verbose Mode (v1.7.0):**
+**Enhanced Verbose Mode with Performance Grading (v1.8.0):**
 ```bash
 mozzy GET /api/users --verbose
 # Shows:
@@ -317,6 +319,8 @@ mozzy GET /api/users --verbose
 # - 🔐 TLS Certificate Info (subject, issuer, expiry)
 # - 📦 Transfer Sizes (request/response with compression ratio)
 # - ⏱️ Visual Timeline with progress bars and percentages
+# - 📊 Performance Grade (A-F) for DNS, TCP, TLS, TTFB with color-coded indicators
+# - 💡 Performance Insights and optimization recommendations
 # - Request & Response headers
 ```
 

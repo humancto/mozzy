@@ -390,6 +390,39 @@ func printVerbose(r Request, res *http.Response, t TimingInfo, v VerboseInfo) {
 	}
 	fmt.Fprintf(os.Stderr, "%s Total            %6s  %s\n",
 		gray("└─"), green(formatDuration(t.Total)), yellow("████████████████████"))
+
+	// Performance Grading
+	grade := CalculateGrade(t)
+	fmt.Fprintf(os.Stderr, "\n%s\n", cyan("📊 Performance Grade:"))
+
+	if grade.DNS != "" {
+		fmt.Fprintf(os.Stderr, "%s DNS Lookup:      %s\n",
+			gray("├─"), FormatGradeWithColor(grade.DNS))
+	}
+	if grade.TCP != "" {
+		fmt.Fprintf(os.Stderr, "%s TCP Connect:     %s\n",
+			gray("├─"), FormatGradeWithColor(grade.TCP))
+	}
+	if grade.TLS != "" {
+		fmt.Fprintf(os.Stderr, "%s TLS Handshake:   %s\n",
+			gray("├─"), FormatGradeWithColor(grade.TLS))
+	}
+	if grade.TTFB != "" {
+		fmt.Fprintf(os.Stderr, "%s Server Response: %s\n",
+			gray("├─"), FormatGradeWithColor(grade.TTFB))
+	}
+	fmt.Fprintf(os.Stderr, "%s Overall:         %s\n",
+		gray("└─"), FormatGradeWithColor(grade.Overall))
+
+	// Performance Recommendations
+	recommendations := grade.GetRecommendations()
+	if len(recommendations) > 0 {
+		fmt.Fprintf(os.Stderr, "\n%s\n", cyan("💡 Performance Insights:"))
+		for _, rec := range recommendations {
+			fmt.Fprintf(os.Stderr, "  %s\n", gray(rec))
+		}
+	}
+
 	fmt.Fprintf(os.Stderr, "\n")
 }
 
