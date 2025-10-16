@@ -32,6 +32,7 @@ mozzy GET https://api.github.com/users/torvalds --jq .name --color
 - 📚 **Collections** - Save and reuse requests like Postman
 - 🎯 **Interactive mode** - Browse history/saved requests with arrow keys
 - 🎭 **Mock server** - Built-in HTTP mock server for testing (NEW!)
+- 📊 **Response diffing** - Compare JSON responses with color-coded differences (NEW!)
 - 🔗 **API chaining** - Capture values and use them in next requests
 - ⚙️ **Workflows** - Multi-step API flows in YAML
 - 🔐 **JWT superpowers** - Decode, verify, sign JWTs instantly
@@ -47,6 +48,7 @@ mozzy GET https://api.github.com/users/torvalds --jq .name --color
 | Request Collections | ❌ | ❌ | ✅ | ✅ |
 | YAML Workflows | ❌ | ❌ | ✅ | ✅ |
 | API Chaining | ❌ | ❌ | ⚠️ | ✅ |
+| Response Diffing | ❌ | ❌ | ❌ | ✅ |
 | JWT Tools Built-in | ❌ | ❌ | ❌ | ✅ |
 | Request History | ❌ | ❌ | ✅ | ✅ |
 | Performance Grading | ❌ | ❌ | ⚠️ | ✅ |
@@ -131,6 +133,9 @@ mozzy i --saved
 mozzy mock 8080 --generate > mock.yaml  # Generate sample config
 mozzy mock 8080 --config mock.yaml      # Start mock server
 mozzy mock 3000 --from-collection       # Use saved requests as mocks
+
+# Compare JSON responses - NEW in v1.10.0!
+mozzy diff prod-response.json staging-response.json
 ```
 
 ---
@@ -401,6 +406,23 @@ mozzy upload https://api.example.com/upload -f resume.pdf --data "name=John" --d
 
 # Upload with authentication
 mozzy upload https://api.example.com/upload -f file.jpg --auth token123
+```
+
+**Response Diffing (v1.10.0):**
+```bash
+# Compare JSON responses with color-coded differences
+mozzy diff prod-response.json staging-response.json
+
+# Useful for detecting API changes between environments
+curl https://prod.api.example.com/users/1 > prod.json
+curl https://staging.api.example.com/users/1 > staging.json
+mozzy diff prod.json staging.json
+
+# Output shows:
+# - Added fields (green)
+# - Removed fields (red)
+# - Changed values (yellow)
+# - Type mismatches (magenta)
 ```
 
 ---
