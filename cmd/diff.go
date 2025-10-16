@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -56,21 +57,20 @@ func runDiff(cmd *cobra.Command, args []string) error {
 	}
 
 	// Compare
-	fmt.Printf("📊 Comparing:\n")
-	fmt.Printf("  Left:  %s\n", file1)
-	fmt.Printf("  Right: %s\n\n", file2)
+	printDiffHeader(file1, file2)
 
 	diffs := compareJSON("", data1, data2)
 
 	if len(diffs) == 0 {
-		color.Green("✅ No differences found - files are identical\n")
+		printNoDifferences()
 		return nil
 	}
 
-	fmt.Printf("Found %d difference(s):\n\n", len(diffs))
+	printDiffSummary(len(diffs))
 	for _, diff := range diffs {
-		printDiff(diff)
+		printDiffLine(diff)
 	}
+	fmt.Println()
 
 	return nil
 }
@@ -176,19 +176,101 @@ func compareJSON(path string, left, right interface{}) []jsonDiff {
 	return diffs
 }
 
-func printDiff(diff jsonDiff) {
+func printDiffHeader(file1, file2 string) {
+	cyan := color.New(color.FgCyan, color.Bold)
+	gray := color.New(color.FgHiBlack)
+
+	fmt.Println()
+	cyan.Println("╔════════════════════════════════════════════════════════════════════")
+	cyan.Print("║ ")
+	fmt.Print("📊 JSON Diff Comparison\n")
+	cyan.Println("╚════════════════════════════════════════════════════════════════════")
+	fmt.Println()
+
+	red := color.New(color.FgRed, color.Bold)
+	green := color.New(color.FgGreen, color.Bold)
+
+	red.Print("  - ")
+	gray.Printf("Left:  %s\n", file1)
+	green.Print("  + ")
+	gray.Printf("Right: %s\n", file2)
+	fmt.Println()
+
+	gray.Println(strings.Repeat("─", 72))
+	fmt.Println()
+}
+
+func printNoDifferences() {
+	green := color.New(color.FgGreen, color.Bold)
+	fmt.Println()
+	green.Println("  ✅ No differences found")
+	fmt.Println()
+	gray := color.New(color.FgHiBlack)
+	gray.Println("  Both JSON files are identical.")
+	fmt.Println()
+}
+
+func printDiffSummary(count int) {
+	yellow := color.New(color.FgYellow, color.Bold)
+	yellow.Printf("  Found %d difference(s):\n\n", count)
+}
+
+func printDiffLine(diff jsonDiff) {
+	pathColor := color.New(color.FgCyan, color.Bold)
+	red := color.New(color.FgRed)
+	green := color.New(color.FgGreen)
+	yellow := color.New(color.FgYellow)
+	magenta := color.New(color.FgMagenta)
+	gray := color.New(color.FgHiBlack)
+
 	switch diff.DiffType {
 	case "added":
-		color.Green("  + %s: %v\n", diff.Path, diff.RightVal)
+		fmt.Print("  ")
+		green.Print("+ ")
+		pathColor.Print(diff.Path)
+		gray.Print(" │ ")
+		fmt.Printf("%v", formatValue(diff.RightVal))
+		fmt.Println()
+
 	case "removed":
-		color.Red("  - %s: %v\n", diff.Path, diff.LeftVal)
+		fmt.Print("  ")
+		red.Print("- ")
+		pathColor.Print(diff.Path)
+		gray.Print(" │ ")
+		fmt.Printf("%v", formatValue(diff.LeftVal))
+		fmt.Println()
+
 	case "changed":
-		color.Yellow("  ~ %s:\n", diff.Path)
-		color.Red("    - %v\n", diff.LeftVal)
-		color.Green("    + %v\n", diff.RightVal)
+		fmt.Print("  ")
+		yellow.Print("~ ")
+		pathColor.Println(diff.Path)
+		fmt.Print("    ")
+		red.Print("- ")
+		fmt.Println(formatValue(diff.LeftVal))
+		fmt.Print("    ")
+		green.Print("+ ")
+		fmt.Println(formatValue(diff.RightVal))
+
 	case "type-mismatch":
-		color.Magenta("  ! %s: type mismatch\n", diff.Path)
-		color.Red("    - %T: %v\n", diff.LeftVal, diff.LeftVal)
-		color.Green("    + %T: %v\n", diff.RightVal, diff.RightVal)
+		fmt.Print("  ")
+		magenta.Print("! ")
+		pathColor.Print(diff.Path)
+		gray.Println(" (type mismatch)")
+		fmt.Print("    ")
+		red.Printf("- %T: %v\n", diff.LeftVal, formatValue(diff.LeftVal))
+		fmt.Print("    ")
+		green.Printf("+ %T: %v\n", diff.RightVal, formatValue(diff.RightVal))
+	}
+}
+
+func formatValue(v interface{}) string {
+	switch val := v.(type) {
+	case string:
+		return fmt.Sprintf("\"%s\"", val)
+	case map[string]interface{}, []interface{}:
+		b, _ := json.Marshal(val)
+		return string(b)
+	default:
+		return fmt.Sprintf("%v", val)
 	}
 }
