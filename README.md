@@ -30,6 +30,7 @@ mozzy GET https://api.github.com/users/torvalds --jq .name --color
 - 🎨 **Beautiful colors** - Auto-colorized JSON that's easy on the eyes
 - 🔍 **Inline queries** - Filter JSON with `--jq` without piping to jq
 - 📚 **Collections** - Save and reuse requests like Postman
+- 🎯 **Interactive mode** - Browse history/saved requests with arrow keys (NEW!)
 - 🔗 **API chaining** - Capture values and use them in next requests
 - ⚙️ **Workflows** - Multi-step API flows in YAML
 - 🔐 **JWT superpowers** - Decode, verify, sign JWTs instantly
@@ -105,6 +106,10 @@ sudo mv mozzy /usr/local/bin/
 # Simple GET request
 mozzy GET https://jsonplaceholder.typicode.com/users/1
 
+# Interactive mode - browse history with arrow keys (v1.8.1)
+mozzy interactive
+mozzy i  # short alias
+
 # Filter JSON with --jq
 mozzy GET https://jsonplaceholder.typicode.com/users/1 --jq .address.city
 
@@ -117,6 +122,9 @@ mozzy GET https://api.example.com/users --verbose
 # Save to collection
 mozzy save my-api GET https://api.example.com/users --desc "Get all users"
 mozzy exec my-api
+
+# Interactive mode for saved requests
+mozzy i --saved
 ```
 
 ---
