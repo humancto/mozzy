@@ -5,6 +5,126 @@ All notable changes to mozzy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2025-10-16
+
+### Added
+- **Network Throttling** - Simulate different network speeds like Charles Proxy
+  - 8 predefined profiles: `56k`, `slow`, `gprs`, `edge`, `3g`, `4g`, `lte`, `5g`
+  - Realistic bandwidth limiting using token bucket algorithm
+  - Latency simulation for each profile (10ms to 500ms)
+  - `--throttle` flag available on all HTTP commands
+  - Throttling info displayed in verbose mode
+  - Perfect for testing slow network conditions, loading states, and mobile scenarios
+
+### Examples
+```bash
+mozzy GET /api/large-file --throttle 3g      # 3G speed (~750 Kbps)
+mozzy GET /api/data --throttle slow --verbose # Slow connection with details
+mozzy POST /api/users --throttle 56k         # Dial-up speed testing
+```
+
+## [1.10.1] - 2025-10-16
+
+### Changed
+- **Enhanced Diff Visual Output** - Improved JSON diff display formatting
+  - Box-drawing characters for professional headers
+  - Color-coded symbols (+ for added, - for removed, ~ for changed, ! for type mismatch)
+  - Better value formatting with proper quoting
+  - Visual separators with Unicode characters
+  - Git-style diff presentation
+
+## [1.10.0] - 2025-10-16
+
+### Added
+- **JSON Response Diffing** - Compare API responses between environments
+  - `mozzy diff` command for comparing two JSON files
+  - Recursive comparison of nested objects and arrays
+  - Color-coded differences (green for added, red for removed, yellow for changed)
+  - Type mismatch detection (magenta)
+  - Shows added fields, removed fields, changed values, and type changes
+  - Perfect for detecting API contract changes between staging and production
+
+### Examples
+```bash
+mozzy diff prod-response.json staging-response.json
+curl https://prod.api.com/users/1 > prod.json
+curl https://staging.api.com/users/1 > staging.json
+mozzy diff prod.json staging.json
+```
+
+## [1.9.0] - 2025-10-15
+
+### Added
+- **Mock HTTP Server** - Built-in API mocking server
+  - `mozzy mock` command to start HTTP mock server
+  - YAML configuration support with routes, responses, headers
+  - Generate sample config with `--generate` flag
+  - Use saved requests as mocks with `--from-collection`
+  - CORS support and custom headers
+  - Response delays for testing timeouts
+  - In-memory request logging
+  - Perfect for frontend development and testing
+
+### Examples
+```bash
+mozzy mock 8080 --generate > mock.yaml     # Generate sample config
+mozzy mock 8080 --config mock.yaml         # Start with config
+mozzy mock 3000 --from-collection          # Use saved requests as mocks
+```
+
+## [1.8.1] - 2025-10-15
+
+### Added
+- **Interactive Mode** - Browse history and saved requests with arrow keys
+  - `mozzy interactive` or `mozzy i` command
+  - `--saved` flag to browse saved collections
+  - `--history` flag to browse request history
+  - Arrow key navigation through requests
+  - Press Enter to execute selected request
+  - ESC or Ctrl+C to exit
+  - Beautiful TUI interface with colored highlighting
+
+### Examples
+```bash
+mozzy i                  # Browse history interactively
+mozzy i --saved          # Browse saved collections
+mozzy interactive        # Long form alias
+```
+
+## [1.8.0] - 2025-10-15
+
+### Added
+- **Performance Grading** - A-F letter grades for request performance
+  - DNS Lookup grading (<50ms=A, 50-100ms=B, 100-200ms=C, >200ms=D/F)
+  - TCP Connection grading (<30ms=A, 30-70ms=B, 70-150ms=C, >150ms=D/F)
+  - TLS Handshake grading (<50ms=A, 50-120ms=B, 120-250ms=C, >250ms=D/F)
+  - Server Response (TTFB) grading (<100ms=A, 100-300ms=B, 300-1000ms=C, >1000ms=D/F)
+  - Overall performance grade calculation
+  - Performance insights and optimization recommendations
+  - Color-coded grades (green=A, blue=B, yellow=C, red=D/F)
+
+### Enhanced
+- **Verbose Mode** now includes:
+  - Visual timeline with progress bars showing percentage of total time
+  - Performance grade section with all timing grades
+  - Intelligent optimization tips based on bottlenecks
+  - Enhanced formatting and emojis
+
+## [1.7.0] - 2025-10-14
+
+### Added
+- **Update Command** - Check for new mozzy versions
+  - `mozzy update` command to check GitHub releases
+  - Compares current version with latest release
+  - Shows release notes and download link
+  - Beautiful formatted output with version comparison
+
+### Examples
+```bash
+mozzy update              # Check for updates
+mozzy version             # Show current version
+```
+
 ## [1.6.0] - 2025-10-14
 
 ### Added
@@ -170,6 +290,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cookie jar support
 - Retry with exponential backoff
 
+[1.11.0]: https://github.com/humancto/mozzy/compare/v1.10.1...v1.11.0
+[1.10.1]: https://github.com/humancto/mozzy/compare/v1.10.0...v1.10.1
+[1.10.0]: https://github.com/humancto/mozzy/compare/v1.9.0...v1.10.0
+[1.9.0]: https://github.com/humancto/mozzy/compare/v1.8.1...v1.9.0
+[1.8.1]: https://github.com/humancto/mozzy/compare/v1.8.0...v1.8.1
+[1.8.0]: https://github.com/humancto/mozzy/compare/v1.7.0...v1.8.0
+[1.7.0]: https://github.com/humancto/mozzy/compare/v1.6.0...v1.7.0
+[1.6.0]: https://github.com/humancto/mozzy/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/humancto/mozzy/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/humancto/mozzy/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/humancto/mozzy/compare/v1.2.0...v1.3.0
