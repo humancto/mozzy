@@ -31,14 +31,19 @@ type Request struct {
 
 // Server represents a proxy server
 type Server struct {
-	Port      int
-	Verbose   bool
-	HTTPS     bool
-	CA        *CA
-	certCache map[string]*tls.Certificate
-	requests  []Request
-	mu        sync.RWMutex
-	reqID     int
+	Port          int
+	Verbose       bool
+	HTTPS         bool
+	CA            *CA
+	certCache     map[string]*tls.Certificate
+	requests      []Request
+	mu            sync.RWMutex
+	reqID         int
+	RecordFile    string            // HAR recording file
+	InjectHeaders map[string]string // Headers to inject
+	FilterDomain  string            // Domain filter (glob pattern)
+	FilterMethods []string          // Method filter
+	FilterErrors  bool              // Only log errors (4xx, 5xx)
 }
 
 // NewServer creates a new proxy server
@@ -152,6 +157,14 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Inject custom headers
+	for key, value := range s.InjectHeaders {
+		proxyReq.Header.Set(key, value)
+		if s.Verbose {
+			color.Yellow("  Injected header: %s: %s", key, value)
+		}
+	}
+
 	// Remove hop-by-hop headers
 	removeHopHeaders(proxyReq.Header)
 
@@ -203,6 +216,11 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	s.requests = append(s.requests, req)
 	s.mu.Unlock()
 
+	// Apply filters - skip logging if filtered out
+	if s.shouldFilter(r.Method, r.Host, resp.StatusCode) {
+		return
+	}
+
 	// Print summary
 	statusColor := color.GreenString
 	if resp.StatusCode >= 400 {
@@ -218,6 +236,64 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		statusColor("%d", resp.StatusCode),
 		duration.Milliseconds(),
 	)
+}
+
+// shouldFilter returns true if request should be filtered out
+func (s *Server) shouldFilter(method, host string, statusCode int) bool {
+	// Filter by error-only mode
+	if s.FilterErrors && statusCode < 400 {
+		return true
+	}
+
+	// Filter by methods
+	if len(s.FilterMethods) > 0 {
+		found := false
+		for _, m := range s.FilterMethods {
+			if m == method {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return true
+		}
+	}
+
+	// Filter by domain (simple substring match for now)
+	if s.FilterDomain != "" {
+		// TODO: Implement glob pattern matching
+		if !contains(host, s.FilterDomain) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// contains checks if string contains substring
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && indexOf(s, substr) >= 0)
+}
+
+func indexOf(s, substr string) int {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return i
+		}
+	}
+	return -1
+}
+
+// Stop stops the proxy server and saves HAR if recording
+func (s *Server) Stop() error {
+	if s.RecordFile != "" {
+		color.Yellow("\n📹 Saving HAR recording to %s...", s.RecordFile)
+		if err := s.ExportHAR(s.RecordFile); err != nil {
+			return fmt.Errorf("failed to save HAR: %w", err)
+		}
+		color.Green("✓ Saved %d requests to %s", len(s.requests), s.RecordFile)
+	}
+	return nil
 }
 
 // logError logs a proxy error

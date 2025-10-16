@@ -9,10 +9,15 @@ import (
 )
 
 var (
-	proxyVerbose bool
-	proxyHTTPS   bool
-	exportCert   bool
-	certInfo     bool
+	proxyVerbose      bool
+	proxyHTTPS        bool
+	exportCert        bool
+	certInfo          bool
+	recordFile        string
+	injectHeaders     []string
+	filterDomain      string
+	filterMethods     string
+	filterErrorsOnly  bool
 )
 
 var proxyCmd = &cobra.Command{
@@ -82,7 +87,65 @@ func runProxy(cmd *cobra.Command, args []string) error {
 	}
 
 	server := proxy.NewServer(port, proxyVerbose, proxyHTTPS)
+
+	// Set recording file
+	server.RecordFile = recordFile
+
+	// Parse and set inject headers
+	if len(injectHeaders) > 0 {
+		server.InjectHeaders = make(map[string]string)
+		for _, h := range injectHeaders {
+			parts := splitHeader(h)
+			if len(parts) == 2 {
+				server.InjectHeaders[parts[0]] = parts[1]
+			}
+		}
+	}
+
+	// Set filters
+	server.FilterDomain = filterDomain
+	server.FilterErrors = filterErrorsOnly
+	if filterMethods != "" {
+		server.FilterMethods = splitMethods(filterMethods)
+	}
+
 	return server.Start()
+}
+
+// splitHeader splits "Key: Value" into ["Key", "Value"]
+func splitHeader(h string) []string {
+	for i := 0; i < len(h); i++ {
+		if h[i] == ':' {
+			key := h[:i]
+			value := h[i+1:]
+			// Trim spaces
+			if len(value) > 0 && value[0] == ' ' {
+				value = value[1:]
+			}
+			return []string{key, value}
+		}
+	}
+	return []string{h}
+}
+
+// splitMethods splits "GET,POST,PUT" into ["GET", "POST", "PUT"]
+func splitMethods(m string) []string {
+	var result []string
+	current := ""
+	for i := 0; i < len(m); i++ {
+		if m[i] == ',' {
+			if current != "" {
+				result = append(result, current)
+				current = ""
+			}
+		} else {
+			current += string(m[i])
+		}
+	}
+	if current != "" {
+		result = append(result, current)
+	}
+	return result
 }
 
 func init() {
@@ -90,6 +153,13 @@ func init() {
 	proxyCmd.Flags().BoolVar(&proxyHTTPS, "https", false, "Enable HTTPS interception (requires CA certificate installation)")
 	proxyCmd.Flags().BoolVar(&exportCert, "export-cert", false, "Export CA certificate in PEM format")
 	proxyCmd.Flags().BoolVar(&certInfo, "cert-info", false, "Show CA certificate information")
+
+	// Recording and filtering
+	proxyCmd.Flags().StringVarP(&recordFile, "record", "r", "", "Record all traffic to HAR file")
+	proxyCmd.Flags().StringArrayVarP(&injectHeaders, "inject-header", "H", []string{}, "Inject header into requests (can be used multiple times)")
+	proxyCmd.Flags().StringVar(&filterDomain, "filter-domain", "", "Only log requests matching domain (substring match)")
+	proxyCmd.Flags().StringVar(&filterMethods, "filter-methods", "", "Only log specific methods (comma-separated: GET,POST)")
+	proxyCmd.Flags().BoolVar(&filterErrorsOnly, "errors-only", false, "Only log requests with 4xx/5xx status codes")
 
 	rootCmd.AddCommand(proxyCmd)
 }

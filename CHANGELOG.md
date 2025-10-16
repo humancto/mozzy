@@ -5,6 +5,55 @@ All notable changes to mozzy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] - 2025-10-16
+
+### Added
+- **HAR Recording** - Record all proxy traffic to HAR (HTTP Archive) format
+  - `--record` flag to save requests/responses to `.har` file
+  - Automatic export on proxy shutdown with Ctrl+C
+  - Compatible with browser dev tools, Postman, Insomnia
+  - Perfect for sharing debugging sessions with team
+
+- **Header Injection** - Inject custom headers into all proxied requests
+  - `-H` / `--inject-header` flag (can be used multiple times)
+  - Useful for adding debug headers, auth tokens, or feature flags
+  - Headers are injected before forwarding to target server
+  - Verbose mode shows injected headers
+
+- **Request Filtering** - Filter which requests are logged to console
+  - `--filter-domain` - Only log requests matching domain (substring)
+  - `--filter-methods` - Only log specific HTTP methods (comma-separated)
+  - `--errors-only` - Only log requests with 4xx/5xx status codes
+  - Reduces noise when debugging specific endpoints
+
+### Examples
+```bash
+# Record session to HAR file
+mozzy proxy 8888 --https --record session.har
+
+# Inject custom headers
+mozzy proxy 8888 -H "X-Debug-Mode: true" -H "Authorization: Bearer token123"
+
+# Only show POST and PUT requests
+mozzy proxy 8888 --filter-methods "POST,PUT"
+
+# Only show errors
+mozzy proxy 8888 --errors-only
+
+# Combined: Record only API errors with debug header
+mozzy proxy 8888 --https --record api-errors.har \
+  --filter-domain api.example.com \
+  --errors-only \
+  -H "X-Debug: true"
+```
+
+### Technical Details
+- HAR format version 1.2 (industry standard)
+- Full request/response metadata captured
+- Timing information preserved
+- All filters work together (AND logic)
+- Zero performance impact when not recording
+
 ## [1.13.0] - 2025-10-16
 
 ### Added
@@ -370,6 +419,7 @@ mozzy version             # Show current version
 - Cookie jar support
 - Retry with exponential backoff
 
+[1.14.0]: https://github.com/humancto/mozzy/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/humancto/mozzy/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/humancto/mozzy/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/humancto/mozzy/compare/v1.10.1...v1.11.0
