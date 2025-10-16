@@ -30,7 +30,8 @@ mozzy GET https://api.github.com/users/torvalds --jq .name --color
 - 🎨 **Beautiful colors** - Auto-colorized JSON that's easy on the eyes
 - 🔍 **Inline queries** - Filter JSON with `--jq` without piping to jq
 - 📚 **Collections** - Save and reuse requests like Postman
-- 🎯 **Interactive mode** - Browse history/saved requests with arrow keys (NEW!)
+- 🎯 **Interactive mode** - Browse history/saved requests with arrow keys
+- 🎭 **Mock server** - Built-in HTTP mock server for testing (NEW!)
 - 🔗 **API chaining** - Capture values and use them in next requests
 - ⚙️ **Workflows** - Multi-step API flows in YAML
 - 🔐 **JWT superpowers** - Decode, verify, sign JWTs instantly
@@ -125,6 +126,11 @@ mozzy exec my-api
 
 # Interactive mode for saved requests
 mozzy i --saved
+
+# Mock server - NEW in v1.9.0!
+mozzy mock 8080 --generate > mock.yaml  # Generate sample config
+mozzy mock 8080 --config mock.yaml      # Start mock server
+mozzy mock 3000 --from-collection       # Use saved requests as mocks
 ```
 
 ---
