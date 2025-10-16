@@ -48,6 +48,7 @@ func runVerb(cmd *cobra.Command, method string, target string, body []byte, isJS
 		RetryCount:     retryCount,
 		RetryCondition: retryCondition,
 		CookieJar:      cookieJar,
+		Throttle:       throttle,
 	}
 
 	res, resBody, ms, err := httpclient.Do(ctx, req)

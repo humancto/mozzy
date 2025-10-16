@@ -15,6 +15,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/humancto/mozzy/internal/retry"
+	"github.com/humancto/mozzy/internal/throttle"
 )
 
 type Request struct {
@@ -28,6 +29,7 @@ type Request struct {
 	RetryCount     int
 	RetryCondition string // e.g., "5xx", ">=500", "429,5xx"
 	CookieJar      string
+	Throttle       string // e.g., "3g", "4g", "slow"
 }
 
 type TimingInfo struct {
@@ -226,8 +228,28 @@ func doRequest(ctx context.Context, r Request) (*http.Response, []byte, TimingIn
 		}
 	}
 
+	// Apply throttling if specified
+	var bodyReader io.Reader = res.Body
+	if r.Throttle != "" {
+		profile, err := throttle.GetProfile(r.Throttle)
+		if err != nil {
+			if r.Verbose {
+				fmt.Fprintf(os.Stderr, "⚠️  %v, throttling disabled\n", err)
+			}
+		} else {
+			// Apply latency before reading response
+			throttle.ApplyLatency(profile.Latency)
+			// Wrap reader with throttling
+			bodyReader = throttle.NewThrottledReader(res.Body, profile.Bandwidth)
+			if r.Verbose {
+				fmt.Fprintf(os.Stderr, "🐌 Throttling: %s (%d KB/s, %v latency)\n",
+					profile.Name, profile.Bandwidth/1024, profile.Latency)
+			}
+		}
+	}
+
 	bodyStart := time.Now()
-	body, err := io.ReadAll(res.Body)
+	body, err := io.ReadAll(bodyReader)
 	timings.ContentTransfer = time.Since(bodyStart)
 
 	if err != nil {

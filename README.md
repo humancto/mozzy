@@ -343,6 +343,23 @@ mozzy GET /api/users --verbose
 # - Request & Response headers
 ```
 
+**Network Throttling (v1.11.0):**
+```bash
+# Simulate different network speeds (like Charles Proxy)
+mozzy GET /api/large-file --throttle 3g      # 3G speed (~750 Kbps)
+mozzy GET /api/data --throttle slow          # Slow connection (~100 Kbps)
+mozzy GET /api/users --throttle 56k          # Dial-up speed
+
+# Available profiles:
+# 56k, slow, gprs, edge, 3g, 4g, lte, 5g
+# Each profile includes realistic latency simulation
+
+# Great for testing:
+# - How your app performs on slow connections
+# - Loading states and timeouts
+# - Progress indicators
+```
+
 **Retry Logic with Conditions:**
 ```bash
 # Retry on failure with exponential backoff (default: 5xx errors)

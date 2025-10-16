@@ -24,6 +24,7 @@ var (
 	retryCount     int
 	retryCondition string
 	cookieJar      string
+	throttle       string
 )
 
 var rootCmd = &cobra.Command{
@@ -64,6 +65,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVar(&retryCount, "retry", 0, "Number of retry attempts on failure (with exponential backoff)")
 	rootCmd.PersistentFlags().StringVar(&retryCondition, "retry-on", "", "Retry condition: 5xx, 429, >=500, network_error, etc. (comma-separated)")
 	rootCmd.PersistentFlags().StringVar(&cookieJar, "cookie-jar", "", "File to store/load cookies for session management")
+	rootCmd.PersistentFlags().StringVar(&throttle, "throttle", "", "Network throttling: 56k, slow, gprs, edge, 3g, 4g, lte, 5g")
 
 	// Custom usage template with colors
 	rootCmd.SetUsageFunc(customUsage)
