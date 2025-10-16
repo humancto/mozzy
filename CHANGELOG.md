@@ -5,6 +5,44 @@ All notable changes to mozzy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2025-10-16
+
+### Added
+- **HTTP Proxy Server** (Phase 1) - Intercept and inspect HTTP traffic
+  - `mozzy proxy` command to start proxy server
+  - Real-time traffic logging with timestamps
+  - Colorized output for methods and status codes
+  - Request duration tracking
+  - Automatic local IP detection for easy mobile setup
+  - Works with curl (`-x flag`), browsers, and any HTTP client
+  - Request/response size tracking
+  - Professional dashboard UI with box-drawing characters
+  - Verbose mode for detailed request inspection
+
+### Use Cases
+- Debug API calls from any application
+- Inspect third-party integrations
+- Test mobile apps (HTTP only - HTTPS coming in Phase 2)
+- Learn how HTTP requests work
+- Capture traffic for analysis
+
+### Examples
+```bash
+mozzy proxy 8888                    # Start on port 8888
+mozzy proxy 8888 --verbose          # Detailed logging
+
+# Use with curl
+curl -x http://localhost:8888 http://api.example.com
+
+# Configure browser
+HTTP Proxy: localhost:8888
+Port: 8888
+```
+
+### Coming Next
+- Phase 2: HTTPS support with certificate generation
+- Phase 3: Request/response modification, breakpoints, HAR recording
+
 ## [1.11.0] - 2025-10-16
 
 ### Added
@@ -290,6 +328,7 @@ mozzy version             # Show current version
 - Cookie jar support
 - Retry with exponential backoff
 
+[1.12.0]: https://github.com/humancto/mozzy/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/humancto/mozzy/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/humancto/mozzy/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/humancto/mozzy/compare/v1.9.0...v1.10.0
